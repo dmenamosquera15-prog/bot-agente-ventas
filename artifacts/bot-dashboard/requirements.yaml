@@ -1,0 +1,18 @@
+packages:
+  "recharts": "For dashboard metrics and intent charts"
+  "date-fns": "For formatting conversation and client dates"
+  "framer-motion": "For page transitions and interactive micro-animations"
+  "clsx": "Utility for constructing className strings conditionally"
+  "tailwind-merge": "Utility for merging tailwind classes safely"
+
+images:
+  - path: "artifacts/bot-dashboard/public/images/bot-logo.png"
+    description: "A minimalist glowing abstract brain icon combined with a subtle chat bubble shape, using vibrant WhatsApp green (#25D366) against a deep dark background"
+    aspect_ratio: "1:1"
+  - path: "artifacts/bot-dashboard/public/images/dashboard-bg.png"
+    description: "Abstract subtle dark background with very faint glowing green grid lines and soft ambient light leaks, premium dark mode aesthetic"
+    aspect_ratio: "16:9"
+
+notes:
+  - "Assumes @workspace/api-client-react exposes all required React Query hooks directly"
+  - "App is styled in a dark mode professional theme by default"

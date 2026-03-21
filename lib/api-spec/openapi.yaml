@@ -1,22 +1,34 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
-  version: 0.1.0
-  description: API specification
+  version: 1.0.0
+  description: Bot Inteligente - Sistema de Agentes IA para WhatsApp
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: chat
+    description: Bot chat simulation and testing
+  - name: clients
+    description: Client management
+  - name: products
+    description: Product catalog management
+  - name: conversations
+    description: Conversation history
+  - name: agents
+    description: Agent system and routing
+  - name: metrics
+    description: Bot performance metrics
+  - name: bot-config
+    description: Bot personality and configuration
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +36,322 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /chat/message:
+    post:
+      operationId: sendChatMessage
+      tags: [chat]
+      summary: Send a message and get bot response
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatMessageInput"
+      responses:
+        "200":
+          description: Bot response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatResponse"
+
+  /clients:
+    get:
+      operationId: getClients
+      tags: [clients]
+      summary: List all clients
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [hot, warm, cold]
+        - name: limit
+          in: query
+          schema:
+            type: number
+        - name: offset
+          in: query
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Clients list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientsListResponse"
+    post:
+      operationId: createClient
+      tags: [clients]
+      summary: Create a new client
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateClientInput"
+      responses:
+        "201":
+          description: Created client
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+
+  /clients/{id}:
+    get:
+      operationId: getClient
+      tags: [clients]
+      summary: Get client by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Client data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+    put:
+      operationId: updateClient
+      tags: [clients]
+      summary: Update client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateClientInput"
+      responses:
+        "200":
+          description: Updated client
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+
+  /products:
+    get:
+      operationId: getProducts
+      tags: [products]
+      summary: List all products
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: number
+        - name: offset
+          in: query
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Products list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductsListResponse"
+    post:
+      operationId: createProduct
+      tags: [products]
+      summary: Create a new product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductInput"
+      responses:
+        "201":
+          description: Created product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+
+  /products/{id}:
+    put:
+      operationId: updateProduct
+      tags: [products]
+      summary: Update product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProductInput"
+      responses:
+        "200":
+          description: Updated product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+    delete:
+      operationId: deleteProduct
+      tags: [products]
+      summary: Delete product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Product deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /conversations:
+    get:
+      operationId: getConversations
+      tags: [conversations]
+      summary: List conversations
+      parameters:
+        - name: clientId
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: number
+        - name: offset
+          in: query
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Conversations list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConversationsListResponse"
+
+  /conversations/{clientId}:
+    get:
+      operationId: getClientConversations
+      tags: [conversations]
+      summary: Get conversation history for a client
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Conversation messages
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConversationHistoryResponse"
+
+  /agents/status:
+    get:
+      operationId: getAgentsStatus
+      tags: [agents]
+      summary: Get status of all agents
+      responses:
+        "200":
+          description: Agents status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentsStatusResponse"
+
+  /metrics/dashboard:
+    get:
+      operationId: getDashboardMetrics
+      tags: [metrics]
+      summary: Get dashboard metrics
+      responses:
+        "200":
+          description: Dashboard metrics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardMetrics"
+
+  /metrics/intents:
+    get:
+      operationId: getIntentMetrics
+      tags: [metrics]
+      summary: Get intent frequency metrics
+      responses:
+        "200":
+          description: Intent metrics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/IntentMetric"
+                required:
+                  - data
+
+  /bot-config:
+    get:
+      operationId: getBotConfig
+      tags: [bot-config]
+      summary: Get bot configuration
+      responses:
+        "200":
+          description: Bot configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BotConfig"
+    put:
+      operationId: updateBotConfig
+      tags: [bot-config]
+      summary: Update bot configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateBotConfigInput"
+      responses:
+        "200":
+          description: Updated bot config
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BotConfig"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +362,443 @@ components:
       required:
         - status
 
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required:
+        - success
+        - message
+
+    ChatMessageInput:
+      type: object
+      properties:
+        phone:
+          type: string
+          description: Phone number (simulated WhatsApp sender)
+        message:
+          type: string
+          description: User message
+        clientName:
+          type: string
+          description: Optional client name for testing
+      required:
+        - phone
+        - message
+
+    ChatResponse:
+      type: object
+      properties:
+        response:
+          type: string
+        intent:
+          type: string
+        agent:
+          type: string
+        confidence:
+          type: number
+        clientId:
+          type: string
+        processingTime:
+          type: number
+      required:
+        - response
+        - intent
+        - agent
+        - confidence
+        - clientId
+        - processingTime
+
+    Client:
+      type: object
+      properties:
+        id:
+          type: string
+        phone:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        leadStatus:
+          type: string
+          enum: [cold, warm, hot]
+        purchaseProbability:
+          type: number
+        technicalLevel:
+          type: string
+          enum: [basic, intermediate, advanced]
+        totalInteractions:
+          type: number
+        lastInteraction:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - phone
+        - leadStatus
+        - purchaseProbability
+        - technicalLevel
+        - totalInteractions
+        - createdAt
+
+    ClientsListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Client"
+        total:
+          type: number
+      required:
+        - data
+        - total
+
+    CreateClientInput:
+      type: object
+      properties:
+        phone:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+      required:
+        - phone
+
+    UpdateClientInput:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        leadStatus:
+          type: string
+          enum: [cold, warm, hot]
+        purchaseProbability:
+          type: number
+        technicalLevel:
+          type: string
+          enum: [basic, intermediate, advanced]
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        category:
+          type: string
+        brand:
+          type: string
+        stock:
+          type: number
+        imageUrl:
+          type: string
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - price
+        - category
+        - stock
+        - isActive
+        - createdAt
+
+    ProductsListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Product"
+        total:
+          type: number
+      required:
+        - data
+        - total
+
+    CreateProductInput:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        category:
+          type: string
+        brand:
+          type: string
+        stock:
+          type: number
+        imageUrl:
+          type: string
+      required:
+        - name
+        - price
+        - category
+        - stock
+
+    UpdateProductInput:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        category:
+          type: string
+        brand:
+          type: string
+        stock:
+          type: number
+        imageUrl:
+          type: string
+        isActive:
+          type: boolean
+
+    Conversation:
+      type: object
+      properties:
+        id:
+          type: string
+        clientId:
+          type: string
+        clientPhone:
+          type: string
+        clientName:
+          type: string
+        lastMessage:
+          type: string
+        lastIntent:
+          type: string
+        lastAgent:
+          type: string
+        messageCount:
+          type: number
+        updatedAt:
+          type: string
+      required:
+        - id
+        - clientId
+        - clientPhone
+        - messageCount
+        - updatedAt
+
+    ConversationsListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Conversation"
+        total:
+          type: number
+      required:
+        - data
+        - total
+
+    ConversationMessage:
+      type: object
+      properties:
+        id:
+          type: string
+        role:
+          type: string
+          enum: [user, bot]
+        message:
+          type: string
+        intent:
+          type: string
+        agent:
+          type: string
+        confidence:
+          type: number
+        createdAt:
+          type: string
+      required:
+        - id
+        - role
+        - message
+        - createdAt
+
+    ConversationHistoryResponse:
+      type: object
+      properties:
+        clientId:
+          type: string
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/ConversationMessage"
+      required:
+        - clientId
+        - messages
+
+    AgentInfo:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        handledIntents:
+          type: array
+          items:
+            type: string
+        totalHandled:
+          type: number
+        successRate:
+          type: number
+        status:
+          type: string
+          enum: [active, idle]
+      required:
+        - name
+        - description
+        - handledIntents
+        - totalHandled
+        - successRate
+        - status
+
+    AgentsStatusResponse:
+      type: object
+      properties:
+        agents:
+          type: array
+          items:
+            $ref: "#/components/schemas/AgentInfo"
+      required:
+        - agents
+
+    DashboardMetrics:
+      type: object
+      properties:
+        totalConversations:
+          type: number
+        totalClients:
+          type: number
+        hotLeads:
+          type: number
+        totalProducts:
+          type: number
+        messagesLast24h:
+          type: number
+        avgConfidence:
+          type: number
+        topIntent:
+          type: string
+        activeClientsToday:
+          type: number
+      required:
+        - totalConversations
+        - totalClients
+        - hotLeads
+        - totalProducts
+        - messagesLast24h
+        - avgConfidence
+        - topIntent
+        - activeClientsToday
+
+    IntentMetric:
+      type: object
+      properties:
+        intent:
+          type: string
+        count:
+          type: number
+        percentage:
+          type: number
+      required:
+        - intent
+        - count
+        - percentage
+
+    BotConfig:
+      type: object
+      properties:
+        id:
+          type: string
+        botName:
+          type: string
+        personality:
+          type: string
+        language:
+          type: string
+        greetingMessage:
+          type: string
+        fallbackMessage:
+          type: string
+        maxContextMessages:
+          type: number
+        isActive:
+          type: boolean
+        businessName:
+          type: string
+        businessType:
+          type: string
+        paymentMethods:
+          type: array
+          items:
+            type: string
+        workingHours:
+          type: string
+      required:
+        - id
+        - botName
+        - personality
+        - language
+        - greetingMessage
+        - fallbackMessage
+        - maxContextMessages
+        - isActive
+        - businessName
+        - businessType
+        - paymentMethods
+        - workingHours
+
+    UpdateBotConfigInput:
+      type: object
+      properties:
+        botName:
+          type: string
+        personality:
+          type: string
+        language:
+          type: string
+        greetingMessage:
+          type: string
+        fallbackMessage:
+          type: string
+        maxContextMessages:
+          type: number
+        isActive:
+          type: boolean
+        businessName:
+          type: string
+        businessType:
+          type: string
+        paymentMethods:
+          type: array
+          items:
+            type: string
+        workingHours:
+          type: string
