@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import {
   LayoutDashboard, MessageSquare, Users, Package, Bot, Settings,
-  Menu, X, Smartphone, MessagesSquare, ChevronRight, Upload, Cpu, BrainCircuit,
+  Menu, X, Smartphone, MessagesSquare, ChevronRight, Upload, Cpu, BrainCircuit, Github,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +20,7 @@ const NAV = [
   { href: "/products/import", label: "Importar Productos", icon: Upload, indent: true },
   { href: "/agents/edit", label: "Agentes IA", icon: Bot },
   { href: "/ai-providers", label: "Proveedores IA", icon: Cpu },
+  { href: "/git-sync", label: "GitHub Sync", icon: Github },
   { label: "─", divider: true },
   { href: "/config", label: "Configuración", icon: Settings },
 ];

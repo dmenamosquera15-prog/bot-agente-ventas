@@ -27,3 +27,8 @@ timeoutMs = 20000
 
 [nix]
 channel = "stable-25_05"
+
+[userenv]
+
+[userenv.shared]
+GIT_REPO_URL = "https://github.com/daveymena/bot-agente-ventas3.git"

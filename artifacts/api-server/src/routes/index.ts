@@ -11,6 +11,7 @@ import botConfigRouter from "./botConfig.js";
 import whatsappRouter from "./whatsapp.js";
 import aiProvidersRouter from "./aiProviders.js";
 import importProductsRouter from "./importProducts.js";
+import gitSyncRouter from "./gitSync.js";
 
 const router: IRouter = Router();
 
@@ -26,5 +27,6 @@ router.use(botConfigRouter);
 router.use(whatsappRouter);
 router.use(aiProvidersRouter);
 router.use(importProductsRouter);
+router.use(gitSyncRouter);
 
 export default router;

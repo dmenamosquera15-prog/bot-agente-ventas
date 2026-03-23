@@ -15,6 +15,7 @@ import Config from "@/pages/Config";
 import WhatsApp from "@/pages/WhatsApp";
 import AiProviders from "@/pages/AiProviders";
 import ImportProducts from "@/pages/ImportProducts";
+import GitSync from "@/pages/GitSync";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { refetchOnWindowFocus: false, staleTime: 5000, retry: 1 } },
@@ -34,6 +35,7 @@ function Router() {
         <Route path="/agents" component={Agents} />
         <Route path="/agents/edit" component={AgentsEditor} />
         <Route path="/ai-providers" component={AiProviders} />
+        <Route path="/git-sync" component={GitSync} />
         <Route path="/config" component={Config} />
         <Route component={NotFound} />
       </Switch>

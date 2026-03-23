@@ -1,10 +1,21 @@
-# Workspace
+# Bot Inteligente - Sistema de WhatsApp con IA
 
-## Overview
+## Proyecto
+Sistema completo de gestión de chatbot WhatsApp inteligente para empresa de importación/exportación de tecnología. Incluye dashboard React, multi-agentes IA (ventas, soporte, técnico, admin), integración real con WhatsApp via Baileys, OpenAI, y CRM de clientes/productos.
 
-pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
+## Features Implementadas
+- **WhatsApp real** via Baileys con QR, auto-reconexión y manejo de mensajes
+- **4 Agentes IA editables**: Ventas, Soporte, Técnico, Admin/Comercial (prompts en BD)
+- **Proveedores IA configurables**: OpenAI, Groq, Grok (xAI), Anthropic, OpenRouter
+- **Importación de productos**: Excel/CSV, JSON, sincronización WooCommerce
+- **CRM**: Clientes con lead scoring, historial de conversaciones
+- **Catálogo de productos** con imágenes, precio, stock, categoría, marca
+- **GitHub Sync**: Push automático al repo `daveymena/bot-agente-ventas3`
+- **Todo en español**, sin datos demo
 
 ## Stack
+
+pnpm workspace monorepo usando TypeScript. Cada paquete maneja sus propias dependencias.
 
 - **Monorepo tool**: pnpm workspaces
 - **Node.js version**: 24
