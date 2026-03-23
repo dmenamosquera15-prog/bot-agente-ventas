@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Github, Copy, Check, Loader2, ExternalLink, Wifi, WifiOff, RefreshCw, CheckCircle2, XCircle } from "lucide-react";
+import { Github, Copy, Check, Loader2, ExternalLink, RefreshCw, CheckCircle2, XCircle, Zap, Key } from "lucide-react";
 
 const BASE = "/api";
-
 const COPILOT_MODELS = ["gpt-4o", "gpt-4o-mini", "claude-3.5-sonnet", "claude-3.7-sonnet", "claude-3.7-sonnet-thought", "gemini-2.0-flash", "o3-mini", "o1"];
 
 type Step = "idle" | "waiting" | "success" | "error";
@@ -15,16 +14,38 @@ export default function GitHubCopilot() {
   const [verificationUri, setVerificationUri] = useState("https://github.com/login/device");
   const [copied, setCopied] = useState(false);
   const [message, setMessage] = useState("");
-  const [polling, setPolling] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [hasPat, setHasPat] = useState(false);
+  const [connected, setConnected] = useState(false);
+  const [connectedModel, setConnectedModel] = useState("");
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const stopPolling = () => { if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; } };
-
   useEffect(() => () => stopPolling(), []);
 
-  const startFlow = async () => {
-    setStep("idle");
+  useEffect(() => {
+    fetch(`${BASE}/github-copilot/status`)
+      .then(r => r.json())
+      .then(d => { setHasPat(d.hasPat); setConnected(d.connected); setConnectedModel(d.model || ""); })
+      .catch(() => {});
+  }, [step]);
+
+  // Method 1: Quick connect via PAT (instant)
+  const connectViaPat = async () => {
+    setLoading(true);
     setMessage("");
+    try {
+      const r = await fetch(`${BASE}/github-copilot/connect-pat`, { method: "POST" });
+      const d = await r.json();
+      if (d.success) { setStep("success"); setMessage(d.message); }
+      else { setStep("error"); setMessage(d.error || "Error al conectar"); }
+    } catch { setStep("error"); setMessage("Error de conexión con el servidor"); }
+    setLoading(false);
+  };
+
+  // Method 2: Device OAuth flow
+  const startDeviceFlow = async () => {
+    setStep("idle"); setMessage("");
     try {
       const r = await fetch(`${BASE}/github-copilot/device-flow`, { method: "POST" });
       const d = await r.json();
@@ -33,37 +54,22 @@ export default function GitHubCopilot() {
       setUserCode(d.userCode);
       setVerificationUri(d.verificationUri || "https://github.com/login/device");
       setStep("waiting");
-      startPolling(d.flowId, d.interval || 5);
-    } catch {
-      setStep("error"); setMessage("Error al conectar con GitHub");
-    }
+      let interval = (d.interval || 5) * 1000;
+      pollRef.current = setInterval(async () => {
+        try {
+          const pr = await fetch(`${BASE}/github-copilot/poll/${d.flowId}`, { method: "POST" });
+          const pd = await pr.json();
+          if (pd.status === "success") { stopPolling(); setStep("success"); setMessage(pd.message || "Conectado"); }
+          else if (pd.status === "expired") { stopPolling(); setStep("error"); setMessage("El código expiró. Inténtalo de nuevo."); }
+          else if (pd.status === "error") { stopPolling(); setStep("error"); setMessage(pd.error || "Error de autorización"); }
+          else if (pd.interval) { clearInterval(pollRef.current!); interval = pd.interval * 1000; pollRef.current = setInterval(arguments.callee, interval); }
+        } catch { /* keep polling */ }
+      }, interval);
+    } catch { setStep("error"); setMessage("Error al conectar con GitHub"); }
   };
 
-  const startPolling = (fId: string, interval: number) => {
-    setPolling(true);
-    pollRef.current = setInterval(async () => {
-      try {
-        const r = await fetch(`${BASE}/github-copilot/poll/${fId}`, { method: "POST" });
-        const d = await r.json();
-        if (d.status === "success") {
-          stopPolling(); setPolling(false); setStep("success"); setMessage(d.message || "Conectado exitosamente");
-        } else if (d.status === "expired") {
-          stopPolling(); setPolling(false); setStep("error"); setMessage("El código expiró. Inténtalo de nuevo.");
-        } else if (d.status === "error") {
-          stopPolling(); setPolling(false); setStep("error"); setMessage(d.error || "Error de autorización");
-        }
-        // pending / slow_down: keep polling
-      } catch { /* keep polling */ }
-    }, interval * 1000);
-  };
-
-  const copyCode = () => {
-    navigator.clipboard.writeText(userCode);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const reset = () => { stopPolling(); setStep("idle"); setFlowId(""); setUserCode(""); setMessage(""); setPolling(false); };
+  const reset = () => { stopPolling(); setStep("idle"); setFlowId(""); setUserCode(""); setMessage(""); setLoading(false); };
+  const copyCode = () => { navigator.clipboard.writeText(userCode); setCopied(true); setTimeout(() => setCopied(false), 2000); };
 
   return (
     <div className="space-y-6 max-w-lg">
@@ -72,60 +78,82 @@ export default function GitHubCopilot() {
           <Github className="text-white" size={22} />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Conectar GitHub Copilot</h1>
-          <p className="text-muted-foreground text-sm mt-0.5">Usa los modelos de Copilot (GPT-4o, Claude, Gemini) en tus agentes.</p>
+          <h1 className="text-2xl font-bold text-foreground">GitHub Copilot</h1>
+          <p className="text-muted-foreground text-sm mt-0.5">Usa GPT-4o, Claude, Gemini y más vía tu suscripción Copilot.</p>
         </div>
       </div>
 
+      {/* Already connected */}
+      {connected && step === "idle" && (
+        <div className="flex items-center gap-3 p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-sm text-green-400">
+          <CheckCircle2 size={16} />
+          <span>Copilot conectado — usando <strong>{connectedModel}</strong></span>
+          <button onClick={reset} className="ml-auto text-xs text-muted-foreground hover:text-foreground">Reconectar</button>
+        </div>
+      )}
+
       <AnimatePresence mode="wait">
         {step === "idle" && (
-          <motion.div key="idle" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="bg-card border border-border rounded-2xl p-6 space-y-5">
-            <div className="space-y-3 text-sm text-muted-foreground">
-              <div className="flex items-start gap-3">
-                <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center font-bold shrink-0 mt-0.5">1</span>
-                <p>Haz clic en <span className="text-foreground font-medium">Iniciar Conexión</span> — se genera un código único</p>
-              </div>
-              <div className="flex items-start gap-3">
-                <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center font-bold shrink-0 mt-0.5">2</span>
-                <p>Visita <span className="font-mono text-xs bg-background border border-border px-2 py-0.5 rounded">github.com/login/device</span> e ingresa el código</p>
-              </div>
-              <div className="flex items-start gap-3">
-                <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center font-bold shrink-0 mt-0.5">3</span>
-                <p>Autoriza el acceso a GitHub Copilot — el bot se configura automáticamente</p>
-              </div>
-            </div>
+          <motion.div key="idle" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-3">
 
-            <div className="bg-muted/30 border border-border/50 rounded-xl p-3 text-xs text-muted-foreground">
-              <p className="font-semibold text-foreground mb-1">Modelos disponibles con Copilot:</p>
-              <div className="flex flex-wrap gap-1.5 mt-1">
-                {COPILOT_MODELS.map(m => <span key={m} className="bg-background border border-border px-2 py-0.5 rounded-full text-foreground">{m}</span>)}
+            {/* Option 1: PAT (fastest) */}
+            {hasPat && (
+              <div className="bg-card border border-primary/30 rounded-2xl p-5">
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <Zap size={16} className="text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground text-sm">Conexión rápida con tu token de GitHub</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">Usa el Personal Access Token que ya tienes configurado. Instantáneo.</p>
+                  </div>
+                </div>
+                <button onClick={connectViaPat} disabled={loading} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-60">
+                  {loading ? <Loader2 size={15} className="animate-spin" /> : <Zap size={15} />}
+                  {loading ? "Conectando..." : "Conectar con mi token de GitHub"}
+                </button>
               </div>
-            </div>
+            )}
 
-            <button onClick={startFlow} className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#24292e] text-white font-semibold hover:bg-[#1a1f24] transition-colors border border-white/10">
-              <Github size={18} /> Iniciar Conexión con GitHub Copilot
-            </button>
+            {/* Option 2: Device flow */}
+            <div className="bg-card border border-border rounded-2xl p-5">
+              <div className="flex items-start gap-3 mb-4">
+                <div className="w-8 h-8 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+                  <Key size={16} className="text-muted-foreground" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground text-sm">Autorización por código {hasPat ? "(alternativo)" : ""}</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">Genera un código, visita GitHub y autoriza manualmente.</p>
+                </div>
+              </div>
+              <div className="bg-muted/30 rounded-xl p-3 text-xs text-muted-foreground space-y-1 mb-4">
+                <p className="font-medium text-foreground">Modelos disponibles:</p>
+                <div className="flex flex-wrap gap-1.5 mt-1">
+                  {COPILOT_MODELS.map(m => <span key={m} className="bg-background border border-border px-2 py-0.5 rounded-full text-foreground">{m}</span>)}
+                </div>
+              </div>
+              <button onClick={startDeviceFlow} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#24292e] text-white text-sm font-semibold hover:bg-[#1a1f24] transition-colors border border-white/10">
+                <Github size={15} /> Iniciar con código de autorización
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground text-center">Requiere suscripción activa a GitHub Copilot</p>
           </motion.div>
         )}
 
         {step === "waiting" && (
           <motion.div key="waiting" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="bg-card border border-border rounded-2xl overflow-hidden">
-            {/* Header */}
-            <div className="bg-[#24292e] px-6 py-5 flex items-center gap-3">
-              <Github className="text-white" size={20} />
-              <span className="text-white font-semibold">Conectar GitHub Copilot</span>
+            <div className="bg-[#24292e] px-6 py-4 flex items-center gap-3">
+              <Github className="text-white" size={18} />
+              <span className="text-white font-semibold text-sm">Conectar GitHub Copilot</span>
             </div>
-
             <div className="p-6 space-y-5">
               <p className="text-sm text-muted-foreground">
-                Visita <a href={verificationUri} target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 font-medium">este enlace</a> e introduce el código a continuación para conectar tu cuenta y usar modelos de GitHub Copilot.
+                Visita <a href={verificationUri} target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 font-medium">este enlace</a> e introduce el código para conectar tu cuenta.
               </p>
-
-              {/* Code display */}
               <div>
                 <p className="text-xs text-muted-foreground mb-2">Código de confirmación</p>
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 px-4 py-3 rounded-xl bg-background border border-border font-mono text-xl tracking-[0.3em] font-bold text-foreground text-center select-all">
+                  <div className="flex-1 px-4 py-3 rounded-xl bg-background border border-border font-mono text-2xl tracking-[0.4em] font-bold text-foreground text-center select-all">
                     {userCode}
                   </div>
                   <button onClick={copyCode} className="p-3 rounded-xl bg-secondary border border-border hover:bg-muted transition-colors shrink-0">
@@ -133,62 +161,56 @@ export default function GitHubCopilot() {
                   </button>
                 </div>
               </div>
-
-              {/* Status */}
               <div className="flex items-center gap-3 py-3 border-t border-border/50">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 size={16} className="animate-spin text-primary" />
-                  <span>Esperando autorización...</span>
-                </div>
-                <a href={verificationUri} target="_blank" rel="noopener noreferrer" className="ml-auto flex items-center gap-1.5 text-xs text-primary hover:underline">
+                <Loader2 size={15} className="animate-spin text-primary shrink-0" />
+                <span className="text-sm text-muted-foreground">Esperando autorización...</span>
+                <a href={verificationUri} target="_blank" rel="noopener noreferrer" className="ml-auto flex items-center gap-1.5 text-xs text-primary hover:underline shrink-0">
                   Abrir GitHub <ExternalLink size={11} />
                 </a>
               </div>
-
-              <button onClick={reset} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-                Cancelar
-              </button>
+              <button onClick={reset} className="text-xs text-muted-foreground hover:text-foreground transition-colors">Cancelar</button>
             </div>
           </motion.div>
         )}
 
         {step === "success" && (
           <motion.div key="success" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-card border border-green-500/30 rounded-2xl p-8 text-center space-y-4">
-            <CheckCircle2 size={48} className="text-green-400 mx-auto" />
+            <CheckCircle2 size={52} className="text-green-400 mx-auto" />
             <div>
               <h3 className="text-xl font-bold text-foreground">¡GitHub Copilot Conectado!</h3>
               <p className="text-muted-foreground text-sm mt-1">{message}</p>
             </div>
             <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-3 text-sm text-green-400">
-              Los agentes ahora usarán los modelos de GitHub Copilot por defecto.
+              Los agentes ahora usan los modelos de GitHub Copilot por defecto.
             </div>
-            <div className="flex gap-3 justify-center">
-              <button onClick={reset} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-secondary text-muted-foreground text-sm hover:text-foreground transition-colors">
-                <RefreshCw size={14} /> Reconectar
-              </button>
-            </div>
+            <button onClick={reset} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-secondary text-muted-foreground text-sm hover:text-foreground transition-colors mx-auto">
+              <RefreshCw size={14} /> Volver
+            </button>
           </motion.div>
         )}
 
         {step === "error" && (
-          <motion.div key="error" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-card border border-red-500/30 rounded-2xl p-8 text-center space-y-4">
-            <XCircle size={48} className="text-red-400 mx-auto" />
-            <div>
-              <h3 className="text-xl font-bold text-foreground">Error de Conexión</h3>
-              <p className="text-muted-foreground text-sm mt-1">{message}</p>
+          <motion.div key="error" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-card border border-red-500/30 rounded-2xl p-6 space-y-4">
+            <div className="flex items-start gap-3">
+              <XCircle size={20} className="text-red-400 shrink-0 mt-0.5" />
+              <div>
+                <h3 className="font-semibold text-foreground">Error de Conexión</h3>
+                <p className="text-muted-foreground text-sm mt-1">{message}</p>
+              </div>
             </div>
-            <button onClick={startFlow} className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#24292e] text-white text-sm font-semibold hover:bg-[#1a1f24] transition-colors border border-white/10 mx-auto">
-              <RefreshCw size={14} /> Intentar de Nuevo
-            </button>
+            <div className="flex gap-3">
+              {hasPat && (
+                <button onClick={connectViaPat} disabled={loading} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity">
+                  <Zap size={14} /> Intentar con mi PAT
+                </button>
+              )}
+              <button onClick={reset} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-secondary text-muted-foreground text-sm hover:text-foreground transition-colors">
+                <RefreshCw size={14} /> Volver
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
-
-      {step === "idle" && (
-        <div className="text-xs text-muted-foreground text-center">
-          Requiere una suscripción activa a GitHub Copilot (Individual, Business o Enterprise)
-        </div>
-      )}
     </div>
   );
 }
