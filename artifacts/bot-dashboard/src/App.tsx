@@ -10,13 +10,14 @@ import Conversations from "@/pages/Conversations";
 import Clients from "@/pages/Clients";
 import Products from "@/pages/Products";
 import Agents from "@/pages/Agents";
+import AgentsEditor from "@/pages/AgentsEditor";
 import Config from "@/pages/Config";
 import WhatsApp from "@/pages/WhatsApp";
+import AiProviders from "@/pages/AiProviders";
+import ImportProducts from "@/pages/ImportProducts";
 
 const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: { refetchOnWindowFocus: false, staleTime: 5000, retry: 1 },
-  },
+  defaultOptions: { queries: { refetchOnWindowFocus: false, staleTime: 5000, retry: 1 } },
 });
 
 function Router() {
@@ -29,7 +30,10 @@ function Router() {
         <Route path="/conversations" component={Conversations} />
         <Route path="/clients" component={Clients} />
         <Route path="/products" component={Products} />
+        <Route path="/products/import" component={ImportProducts} />
         <Route path="/agents" component={Agents} />
+        <Route path="/agents/edit" component={AgentsEditor} />
+        <Route path="/ai-providers" component={AiProviders} />
         <Route path="/config" component={Config} />
         <Route component={NotFound} />
       </Switch>
