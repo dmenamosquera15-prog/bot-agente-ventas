@@ -1,6 +1,6 @@
 import { generateResponse } from "../services/aiService.js";
 
-export const HANDLED_INTENTS = ["facturacion", "ubicacion", "horario"];
+export const HANDLED_INTENTS = ["facturacion", "ubicacion", "horario", "exportacion", "importacion", "envio_internacional", "pedido"];
 
 export async function handle(
   clientName: string | null,

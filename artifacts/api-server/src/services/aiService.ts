@@ -23,6 +23,7 @@ const INTENTS = [
   "consulta_producto",
   "comparacion",
   "compra",
+  "pedido",
   "objecion_precio",
   "soporte",
   "reclamo",
@@ -31,6 +32,9 @@ const INTENTS = [
   "facturacion",
   "ubicacion",
   "horario",
+  "exportacion",
+  "importacion",
+  "envio_internacional",
   "desconocido",
 ];
 

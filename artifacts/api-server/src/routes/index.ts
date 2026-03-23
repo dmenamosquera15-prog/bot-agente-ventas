@@ -7,6 +7,7 @@ import conversationsRouter from "./conversations.js";
 import metricsRouter from "./metrics.js";
 import agentsRouter from "./agents.js";
 import botConfigRouter from "./botConfig.js";
+import whatsappRouter from "./whatsapp.js";
 
 const router: IRouter = Router();
 
@@ -18,5 +19,6 @@ router.use(conversationsRouter);
 router.use(metricsRouter);
 router.use(agentsRouter);
 router.use(botConfigRouter);
+router.use(whatsappRouter);
 
 export default router;
