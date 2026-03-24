@@ -93,26 +93,6 @@ export async function searchRelevantProducts(
 ): Promise<string[]> {
   try {
     const { client } = await getClient();
-    const completion = await client.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: `Tu tarea es identificar EXACTAMENTE qué productos de la lista está buscando el cliente.
-REGLAS:
-- Si el cliente pregunta por un producto específico (ej: "curso de piano"), UNICAMENTE elige ese producto.
-- No elijas "mega packs" o colecciones si el cliente busca un artículo individual.
-- Si el mensaje es vago, elige máximo 2 relacionados.
-- Si no hay coincidencia clara, devuelve "none".
-PRODUCTOS EN CATÁLOGO: ${productNames.join(", ")}
-Responde SOLO con los nombres exactos separados por comas, o "none".`,
-        },
-        { role: "user", content: `Mensaje: "${message}"` },
-      ],
-      temperature: 0,
-    });
-
-    const text = completion.choices[0]?.message?.content || "";
 
     // Normalization helper: remove diacritics, punctuation, emojis and collapse spaces
     const normalize = (s: string) =>
@@ -124,39 +104,82 @@ Responde SOLO con los nombres exactos separados por comas, o "none".`,
         .trim()
         .toLowerCase();
 
-    if (normalize(text) === "none") return [];
-
-    // Build map of normalized product name -> original
+    // Build map of normalized product name -> original with multiple indices for fuzzy matching
     const normMap = new Map<string, string>();
+    const productTokens = new Map<string, string[]>(); // normalized name -> tokens
+
     for (const n of productNames) {
-      normMap.set(normalize(n), n);
+      const norm = normalize(n);
+      normMap.set(norm, n);
+      productTokens.set(norm, norm.split(/\s+/));
     }
 
-    // Try to parse LLM output by common separators, and match normalized tokens
+    const completion = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: `Tu tarea es identificar EXACTAMENTE qué productos de la lista está buscando el cliente.
+REGLAS CRÍTICAS:
+- Si el cliente menciona "piano", busca productos con "piano" en el nombre
+- Si menciona "mega pack" o "pack", busca productos con eso
+- Sé flexible: "mega packs" = "PACK 40 Mega Packs", "piano" = cualquier producto con piano
+- Si no hay coincidencia CLARA, devuelve "none"
+- Devuelve SOLO los nombres exactos de productos que sí coinciden
+PRODUCTOS EN CATÁLOGO: ${productNames.join(" | ")}
+Responde SOLO con los nombres exactos separados por comas, o "none".`,
+        },
+        { role: "user", content: `Mensaje: "${message}"` },
+      ],
+      temperature: 0,
+    });
+
+    const text = completion.choices[0]?.message?.content || "";
+
+    if (normalize(text) === "none") return [];
+
+    // Parse LLM output more robustly
     const candidates = text
-      .split(/[,\n;|•\-]+/)
+      .split(/[,\n;|•]+/)
       .map((t) => t.trim())
       .filter(Boolean);
 
     const results = new Set<string>();
 
+    // Multiple matching strategies for robustness
     for (const c of candidates) {
       const nn = normalize(c);
+
+      // Strategy 1: Exact normalized match
       if (normMap.has(nn)) {
         results.add(normMap.get(nn)!);
         continue;
       }
 
-      // If not exact, try substring match: check if any product normalized name appears inside token or viceversa
+      // Strategy 2: Substring match (both directions)
       for (const [k, orig] of normMap.entries()) {
         if (k.length === 0) continue;
         if (nn.includes(k) || k.includes(nn)) {
           results.add(orig);
+          continue;
+        }
+      }
+
+      // Strategy 3: Token-level matching (if at least 70% of tokens match)
+      const cTokens = nn.split(/\s+/);
+      for (const [k, origTokens] of productTokens.entries()) {
+        const matchCount = cTokens.filter(
+          (t) => origTokens.includes(t) && t.length > 2,
+        ).length;
+        const matchRatio =
+          matchCount / Math.max(cTokens.length, origTokens.length);
+        if (matchRatio >= 0.5) {
+          results.add(normMap.get(k)!);
         }
       }
     }
 
-    // Fallback: if LLM output didn't match, try searching the whole LLM text for product names
+    // Fallback: search the entire LLM response for product names
     if (results.size === 0) {
       const full = normalize(text);
       for (const [k, orig] of normMap.entries()) {
@@ -164,10 +187,12 @@ Responde SOLO con los nombres exactos separados por comas, o "none".`,
       }
     }
 
+    // Final validation: ensure all results are in original product list
     return Array.from(results)
       .filter((t) => productNames.includes(t))
       .slice(0, 5);
-  } catch {
+  } catch (err) {
+    console.error("searchRelevantProducts error:", err);
     return [];
   }
 }
