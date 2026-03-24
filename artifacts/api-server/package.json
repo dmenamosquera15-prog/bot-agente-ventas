@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "cross-env NODE_ENV=development pnpm exec tsx --enable-source-maps src/index.ts",
+    "dev": "cross-env NODE_ENV=development tsx watch --env-file=../../.env src/index.ts",
     "build": "node ./build.mjs",
     "start": "node --enable-source-maps ./dist/index.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit"
@@ -20,6 +20,7 @@
     "cors": "^2",
     "drizzle-orm": "catalog:",
     "express": "^5",
+    "link-preview-js": "^4.0.0",
     "multer": "^2.1.1",
     "node-fetch": "^3.3.2",
     "openai": "^6.32.0",

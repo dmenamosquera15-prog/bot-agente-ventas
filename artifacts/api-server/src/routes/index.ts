@@ -13,11 +13,13 @@ import aiProvidersRouter from "./aiProviders.js";
 import importProductsRouter from "./importProducts.js";
 import gitSyncRouter from "./gitSync.js";
 import githubCopilotRouter from "./githubCopilot.js";
+import adminChatRouter from "./adminChat.js";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use(chatRouter);
+router.use(adminChatRouter);
 router.use(clientsRouter);
 router.use(productsRouter);
 router.use(conversationsRouter);

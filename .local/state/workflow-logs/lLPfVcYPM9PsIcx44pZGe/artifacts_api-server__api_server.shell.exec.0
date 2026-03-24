@@ -1,0 +1,564 @@
+
+> @workspace/api-server@0.0.0 dev /home/runner/workspace/artifacts/api-server
+> export NODE_ENV=development && pnpm run build && pnpm run start
+
+
+> @workspace/api-server@0.0.0 build /home/runner/workspace/artifacts/api-server
+> node ./build.mjs
+
+
+  [37mdist/[0m[1mindex.mjs[0m                       [33m4.7mb ⚠️[0m
+  [37mdist/[0m[1mpino-worker.mjs[0m               [36m153.4kb[0m
+  [37mdist/[0m[1mpino-file.mjs[0m                 [36m142.1kb[0m
+  [37mdist/[0m[1mpino-pretty.mjs[0m               [36m114.6kb[0m
+  [37mdist/[0m[1mthread-stream-worker.mjs[0m        [36m7.3kb[0m
+  [37mdist/[0m[1mindex.mjs.map[0m                   [36m8.6mb[0m
+  [37mdist/[0m[1mpino-worker.mjs.map[0m           [36m256.9kb[0m
+  [37mdist/[0m[1mpino-file.mjs.map[0m             [36m229.0kb[0m
+  [37mdist/[0m[1mpino-pretty.mjs.map[0m           [36m203.9kb[0m
+  [37mdist/[0m[1mthread-stream-worker.mjs.map[0m   [36m12.0kb[0m
+
+⚡ [32mDone in 351ms[0m
+
+> @workspace/api-server@0.0.0 start /home/runner/workspace/artifacts/api-server
+> node --enable-source-maps ./dist/index.mjs
+
+[22:26:55.703] [32mINFO[39m (1942): [36mServer listening[39m
+    [35mport[39m: 8080
+[22:26:56.013] [32mINFO[39m (1942): [36mconnected to WA[39m
+    [35mbrowser[39m: [
+      "Bot Inteligente",
+      "Chrome",
+      "1.0.0"
+    ]
+    [35mhelloMsg[39m: {
+      "clientHello": {
+        "ephemeral": "s4VlNmVDkGbJq+9BTEERhWN/i3jNA3sOSbprU7yI7D0="
+      }
+    }
+[22:26:56.145] [32mINFO[39m (1942): [36mnot logged in, attempting registration...[39m
+    [35mnode[39m: {
+      "passive": false,
+      "userAgent": {
+        "platform": "WEB",
+        "appVersion": {
+          "primary": 2,
+          "secondary": 3000,
+          "tertiary": 1035194821
+        },
+        "mcc": "000",
+        "mnc": "000",
+        "osVersion": "0.1",
+        "device": "Desktop",
+        "osBuildNumber": "0.1",
+        "releaseChannel": "RELEASE",
+        "localeLanguageIso6391": "en",
+        "localeCountryIso31661Alpha2": "US"
+      },
+      "webInfo": {
+        "webSubPlatform": "WEB_BROWSER"
+      },
+      "connectType": "WIFI_UNKNOWN",
+      "connectReason": "USER_ACTIVATED",
+      "devicePairingData": {
+        "eRegid": "AAAAPQ==",
+        "eKeytype": "BQ==",
+        "eIdent": "hSufa3QDWl9Jo4jq8nyFGPp53xljYYMtWQf4cdWF/CI=",
+        "eSkeyId": "AAAB",
+        "eSkeyVal": "aeQ7LgbkBfBiF0kmqOJgCQ1YV6GJi2mDlnFHUUpUdC0=",
+        "eSkeySig": "hEe1D4DFwG1xhh52jtO79C6GwfIvmfX2ZD2etTfHUl747vaI7JTBqy1gHTSGZkQA9Vfw7Kq4st9QhMMhacG6ig==",
+        "buildHash": "oslHHv+RCp4a5lmJCiiHLQ==",
+        "deviceProps": "Cg9Cb3QgSW50ZWxpZ2VudGUSBggKEA8YBxgBIAAqFxiAUCABMAA4AUABSAFQAVgBYAFwAXgA"
+      },
+      "pull": false
+    }
+[22:26:56.414] [32mINFO[39m (1942): [36mWhatsApp QR generated[39m
+[22:26:57.734] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 1,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 200
+    }
+    [35mresponseTime[39m: 3
+[22:27:01.792] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 2,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 2
+[22:27:06.778] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 3,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:27:11.791] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 4,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[22:27:16.779] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 5,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[22:27:21.791] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 6,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:27:26.787] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 7,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:27:32.725] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 8,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:27:36.801] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 9,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:27:41.788] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 10,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[22:27:46.792] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 11,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:27:51.803] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 12,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[22:27:56.279] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 15,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[22:27:56.299] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 13,
+      "method": "GET",
+      "url": "/api/conversations"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 29
+[22:27:56.305] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 14,
+      "method": "GET",
+      "url": "/api/metrics/intents"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 29
+[22:27:56.314] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 16,
+      "method": "GET",
+      "url": "/api/metrics/dashboard"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 34
+[22:27:56.415] [32mINFO[39m (1942): [36mWhatsApp QR generated[39m
+[22:28:01.262] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 17,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 200
+    }
+    [35mresponseTime[39m: 0
+[22:28:06.287] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 18,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:28:11.264] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 19,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:28:16.274] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 20,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[22:28:16.416] [32mINFO[39m (1942): [36mWhatsApp QR generated[39m
+[22:28:21.285] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 21,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 200
+    }
+    [35mresponseTime[39m: 0
+[22:28:26.259] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 22,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:28:31.260] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 23,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:28:36.273] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 24,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:28:36.417] [32mINFO[39m (1942): [36mWhatsApp QR generated[39m
+[22:28:41.260] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 25,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 200
+    }
+    [35mresponseTime[39m: 1
+[22:28:46.261] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 26,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[22:28:51.271] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 27,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[22:28:56.264] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 28,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[22:28:56.416] [32mINFO[39m (1942): [36mWhatsApp QR generated[39m
+[22:28:57.177] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 29,
+      "method": "GET",
+      "url": "/api/agents-editor"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 46
+[22:28:58.769] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 30,
+      "method": "GET",
+      "url": "/api/ai-providers"
+    }
+    [35mres[39m: {
+      "statusCode": 200
+    }
+    [35mresponseTime[39m: 2
+[22:29:01.259] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 31,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 200
+    }
+    [35mresponseTime[39m: 0
+[22:29:06.274] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 32,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:29:11.260] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 33,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[22:29:16.261] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 34,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:29:16.417] [32mINFO[39m (1942): [36mWhatsApp QR generated[39m
+[22:29:21.275] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 35,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 200
+    }
+    [35mresponseTime[39m: 1
+[22:29:26.260] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 36,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:29:28.264] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 37,
+      "method": "GET",
+      "url": "/api/ai-providers"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 11
+[22:29:31.258] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 38,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:29:32.823] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 39,
+      "method": "GET",
+      "url": "/api/agents-editor"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 5
+[22:29:33.626] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 40,
+      "method": "GET",
+      "url": "/api/ai-providers"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[22:29:36.258] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 41,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:29:36.418] [32mINFO[39m (1942): [36mconnection errored[39m
+    [35mtrace[39m: "Error: QR refs attempts ended\n    at Timeout.genPairQR (/home/runner/workspace/node_modules/.pnpm/@whiskeysockets+baileys@7.0.0-rc.9/node_modules/@whiskeysockets/baileys/src/Socket/socket.ts:866:9)\n    at listOnTimeout (node:internal/timers:605:17)\n    at process.processTimers (node:internal/timers:541:7)"
+[22:29:36.419] [33mWARN[39m (1942): [36mWhatsApp disconnected[39m
+    [35mshouldReconnect[39m: true
+[22:29:37.460] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 42,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:29:41.621] [32mINFO[39m (1942): [36mconnected to WA[39m
+    [35mbrowser[39m: [
+      "Bot Inteligente",
+      "Chrome",
+      "1.0.0"
+    ]
+    [35mhelloMsg[39m: {
+      "clientHello": {
+        "ephemeral": "yQI+XixRX0ZXvjdO4oa3CqNYPCT0ydUrrECkoFbKbhA="
+      }
+    }
+[22:29:41.655] [32mINFO[39m (1942): [36mnot logged in, attempting registration...[39m
+    [35mnode[39m: {
+      "passive": false,
+      "userAgent": {
+        "platform": "WEB",
+        "appVersion": {
+          "primary": 2,
+          "secondary": 3000,
+          "tertiary": 1035194821
+        },
+        "mcc": "000",
+        "mnc": "000",
+        "osVersion": "0.1",
+        "device": "Desktop",
+        "osBuildNumber": "0.1",
+        "releaseChannel": "RELEASE",
+        "localeLanguageIso6391": "en",
+        "localeCountryIso31661Alpha2": "US"
+      },
+      "webInfo": {
+        "webSubPlatform": "WEB_BROWSER"
+      },
+      "connectType": "WIFI_UNKNOWN",
+      "connectReason": "USER_ACTIVATED",
+      "devicePairingData": {
+        "eRegid": "AAAA1Q==",
+        "eKeytype": "BQ==",
+        "eIdent": "eKVHdWVqD1//z7liUhJIOdUmEJtRdPCenF58ZidEYXg=",
+        "eSkeyId": "AAAB",
+        "eSkeyVal": "TXitM35cwTRq+UmAsl+icHnR8TdIBKSpwzznoxbiLCU=",
+        "eSkeySig": "oW/4Zn3raH4DWjhcBeZexfd3kIH8ZCvEEe2uHbbqaYuJ0g5toDG15cjcXILGyYwMT7mbPXJEseRVS/aZhvEIhA==",
+        "buildHash": "oslHHv+RCp4a5lmJCiiHLQ==",
+        "deviceProps": "Cg9Cb3QgSW50ZWxpZ2VudGUSBggKEA8YBxgBIAAqFxiAUCABMAA4AUABSAFQAVgBYAFwAXgA"
+      },
+      "pull": false
+    }
+[22:29:41.837] [32mINFO[39m (1942): [36mWhatsApp QR generated[39m
+[22:29:41.878] [32mINFO[39m (1942): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 43,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 200
+    }
+    [35mresponseTime[39m: 0
+[41m[30m ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL [39m[49m [31m@workspace/api-server@0.0.0 dev: `export NODE_ENV=development && pnpm run build && pnpm run start`[39m
+[31mCommand failed with signal "SIGTERM"[39m

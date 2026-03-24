@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import {
   LayoutDashboard, MessageSquare, Users, Package, Bot, Settings,
-  Menu, X, Smartphone, MessagesSquare, ChevronRight, Upload, Cpu, BrainCircuit, Github,
+  Menu, X, Smartphone, MessagesSquare, ChevronRight, Upload, Cpu, BrainCircuit, Github, Sparkle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -21,9 +21,12 @@ const NAV = [
   { href: "/agents/edit", label: "Agentes IA", icon: Bot },
   { href: "/ai-providers", label: "Proveedores IA", icon: Cpu },
   { href: "/github-copilot", label: "GitHub Copilot", icon: BrainCircuit, indent: true },
+  { href: "/admin-copilot", label: "Admin Co-Pilot", icon: Sparkle },
   { href: "/git-sync", label: "GitHub Sync", icon: Github },
   { label: "─", divider: true },
   { href: "/config", label: "Configuración", icon: Settings },
+  { label: "─", divider: true },
+  { href: "/auth", label: "Cerrar Sesión", icon: X },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {

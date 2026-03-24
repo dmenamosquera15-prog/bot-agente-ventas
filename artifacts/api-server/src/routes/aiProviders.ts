@@ -12,12 +12,14 @@ const MODELS: Record<string, string[]> = {
   anthropic: ["claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022", "claude-3-opus-20240229"],
   openrouter: ["meta-llama/llama-3.1-8b-instruct", "mistralai/mistral-7b-instruct", "google/gemma-2-9b-it"],
   github_copilot: ["gpt-4o", "gpt-4o-mini", "claude-3.5-sonnet", "claude-3.7-sonnet", "claude-3.7-sonnet-thought", "gemini-2.0-flash", "o3-mini", "o1"],
+  github_models: ["gpt-4o", "gpt-4o-mini", "o3-mini", "o1", "phi-3-medium", "phi-3-mini", "mistral-large-2407", "command-r-plus-08-2024"],
 };
 
 const BASE_URLS: Record<string, string> = {
   grok: "https://api.x.ai/v1",
   groq: "https://api.groq.com/openai/v1",
   anthropic: "https://api.anthropic.com/v1",
+  github_models: "https://models.inference.ai.azure.com",
 };
 
 router.get("/ai-providers", async (_req, res) => {

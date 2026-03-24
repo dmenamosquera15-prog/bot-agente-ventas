@@ -1,0 +1,1237 @@
+
+> @workspace/api-server@0.0.0 dev /home/runner/workspace/artifacts/api-server
+> export NODE_ENV=development && pnpm run build && pnpm run start
+
+
+> @workspace/api-server@0.0.0 build /home/runner/workspace/artifacts/api-server
+> node ./build.mjs
+
+
+  [37mdist/[0m[1mindex.mjs[0m                       [33m4.7mb ⚠️[0m
+  [37mdist/[0m[1mpino-worker.mjs[0m               [36m153.4kb[0m
+  [37mdist/[0m[1mpino-file.mjs[0m                 [36m142.1kb[0m
+  [37mdist/[0m[1mpino-pretty.mjs[0m               [36m114.6kb[0m
+  [37mdist/[0m[1mthread-stream-worker.mjs[0m        [36m7.3kb[0m
+  [37mdist/[0m[1mindex.mjs.map[0m                   [36m8.6mb[0m
+  [37mdist/[0m[1mpino-worker.mjs.map[0m           [36m256.9kb[0m
+  [37mdist/[0m[1mpino-file.mjs.map[0m             [36m229.0kb[0m
+  [37mdist/[0m[1mpino-pretty.mjs.map[0m           [36m203.9kb[0m
+  [37mdist/[0m[1mthread-stream-worker.mjs.map[0m   [36m12.0kb[0m
+
+⚡ [32mDone in 551ms[0m
+
+> @workspace/api-server@0.0.0 start /home/runner/workspace/artifacts/api-server
+> node --enable-source-maps ./dist/index.mjs
+
+[22:45:47.271] [32mINFO[39m (3433): [36mServer listening[39m
+    [35mport[39m: 8080
+[22:45:47.577] [32mINFO[39m (3433): [36mconnected to WA[39m
+    [35mbrowser[39m: [
+      "Bot Inteligente",
+      "Chrome",
+      "1.0.0"
+    ]
+    [35mhelloMsg[39m: {
+      "clientHello": {
+        "ephemeral": "OHYgxZOEKlgOQEv+SrJSeSrfqExz6VNhqLzp77FtTUg="
+      }
+    }
+[22:45:47.710] [32mINFO[39m (3433): [36mnot logged in, attempting registration...[39m
+    [35mnode[39m: {
+      "passive": false,
+      "userAgent": {
+        "platform": "WEB",
+        "appVersion": {
+          "primary": 2,
+          "secondary": 3000,
+          "tertiary": 1035194821
+        },
+        "mcc": "000",
+        "mnc": "000",
+        "osVersion": "0.1",
+        "device": "Desktop",
+        "osBuildNumber": "0.1",
+        "releaseChannel": "RELEASE",
+        "localeLanguageIso6391": "en",
+        "localeCountryIso31661Alpha2": "US"
+      },
+      "webInfo": {
+        "webSubPlatform": "WEB_BROWSER"
+      },
+      "connectType": "WIFI_UNKNOWN",
+      "connectReason": "USER_ACTIVATED",
+      "devicePairingData": {
+        "eRegid": "AAAA7Q==",
+        "eKeytype": "BQ==",
+        "eIdent": "+Lz7mKTytMweiWI2FfT7N6OxzLh1qvywSuW8sEpcuw8=",
+        "eSkeyId": "AAAB",
+        "eSkeyVal": "A6itR5wfa1tafVup9SPYpdAJ3qJlz/8o8NYIta/iakY=",
+        "eSkeySig": "iIt3rIMyCex4jiiPq7a4moir8Wpk+kgEj0HrnhegWN1HcOP9TvMUuLnmINfXP0BCRvKAWXPtuo63wWjB5+ItjQ==",
+        "buildHash": "oslHHv+RCp4a5lmJCiiHLQ==",
+        "deviceProps": "Cg9Cb3QgSW50ZWxpZ2VudGUSBggKEA8YBxgBIAAqFxiAUCABMAA4AUABSAFQAVgBYAFwAXgA"
+      },
+      "pull": false
+    }
+[22:45:47.962] [32mINFO[39m (3433): [36mWhatsApp QR generated[39m
+[22:45:49.366] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 1,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 200
+    }
+    [35mresponseTime[39m: 3
+[22:45:54.348] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 2,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[22:45:55.888] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 4,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 200
+    }
+    [35mresponseTime[39m: 0
+[22:45:55.900] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 3,
+      "method": "GET",
+      "url": "/api/github-copilot/status"
+    }
+    [35mres[39m: {
+      "statusCode": 200
+    }
+    [35mresponseTime[39m: 19
+[22:45:59.352] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 5,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:46:04.357] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 6,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[22:46:09.350] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 7,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[22:46:14.343] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 8,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:46:16.505] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 9,
+      "method": "POST",
+      "url": "/api/github-copilot/device-flow"
+    }
+    [35mres[39m: {
+      "statusCode": 200
+    }
+    [35mresponseTime[39m: 187
+[22:46:16.631] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 10,
+      "method": "GET",
+      "url": "/api/github-copilot/status"
+    }
+    [35mres[39m: {
+      "statusCode": 200
+    }
+    [35mresponseTime[39m: 11
+[22:46:19.344] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 11,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[22:46:21.850] [32mINFO[39m (3433): [36mCopilot poll response[39m
+    [35mreq[39m: {
+      "id": 12,
+      "method": "POST",
+      "url": "/api/github-copilot/poll/4lo4kdxpv1j"
+    }
+    [35mtokenData[39m: "{\"error\":\"authorization_pending\",\"error_description\":\"The authorization request is still pending.\",\"error_uri\":\"https://docs.github.com/developers/apps/authorizing-oauth-apps#error-codes-for-the-device-flow\"}"
+[22:46:21.851] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 12,
+      "method": "POST",
+      "url": "/api/github-copilot/poll/4lo4kdxpv1j"
+    }
+    [35mres[39m: {
+      "statusCode": 200
+    }
+    [35mresponseTime[39m: 115
+[22:46:24.717] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 13,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[22:46:26.814] [32mINFO[39m (3433): [36mCopilot poll response[39m
+    [35mreq[39m: {
+      "id": 14,
+      "method": "POST",
+      "url": "/api/github-copilot/poll/4lo4kdxpv1j"
+    }
+    [35mtokenData[39m: "{\"error\":\"slow_down\",\"error_description\":\"Too many requests have been made in the same timeframe.\",\"error_uri\":\"https://docs.github.com\",\"interval\":10}"
+[22:46:26.815] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 14,
+      "method": "POST",
+      "url": "/api/github-copilot/poll/4lo4kdxpv1j"
+    }
+    [35mres[39m: {
+      "statusCode": 200
+    }
+    [35mresponseTime[39m: 98
+[22:46:29.341] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 15,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:46:34.350] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 16,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:46:39.359] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 17,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[22:46:44.716] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 18,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[22:46:47.961] [32mINFO[39m (3433): [36mWhatsApp QR generated[39m
+[22:46:49.345] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 19,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 200
+    }
+    [35mresponseTime[39m: 0
+[22:46:52.419] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 20,
+      "method": "GET",
+      "url": "/api/metrics/dashboard"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 27
+[22:46:52.420] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 21,
+      "method": "GET",
+      "url": "/api/metrics/intents"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 20
+[22:46:52.532] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 22,
+      "method": "GET",
+      "url": "/api/conversations"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 4
+[22:46:52.957] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 23,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:46:54.350] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 24,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[22:46:55.964] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 25,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:46:58.963] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 26,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:46:59.344] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 27,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[22:47:01.968] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 28,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[22:47:04.356] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 29,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[22:47:04.963] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 30,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[22:47:07.963] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 31,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:47:07.964] [32mINFO[39m (3433): [36mWhatsApp QR generated[39m
+[22:47:09.345] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 32,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 200
+    }
+    [35mresponseTime[39m: 0
+[22:47:10.964] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 33,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:47:13.964] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 34,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[22:47:14.340] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 35,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:47:16.973] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 36,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:47:19.345] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 37,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:47:19.964] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 38,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[22:47:22.966] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 39,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[22:47:24.347] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 40,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:47:25.964] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 41,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:47:27.965] [32mINFO[39m (3433): [36mWhatsApp QR generated[39m
+[22:47:28.974] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 42,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 200
+    }
+    [35mresponseTime[39m: 0
+[22:47:29.347] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 43,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:47:31.089] [32mINFO[39m (3433): [36mpairing configured successfully, expect to restart the connection...[39m
+    [35mme[39m: {
+      "id": "573042748709:14@s.whatsapp.net",
+      "name": "Tecnovariedades",
+      "lid": "34579469598873:14@lid"
+    }
+    [35mplatform[39m: "smba"
+[22:47:31.963] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 44,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[22:47:32.488] [31mERROR[39m (3433): [36mstream errored out[39m
+    [35mfullErrorNode[39m: {
+      "tag": "stream:error",
+      "attrs": {
+        "code": "515"
+      }
+    }
+[22:47:32.488] [32mINFO[39m (3433): [36mconnection errored[39m
+    [35mtrace[39m: "Error: Stream Errored (restart required)\n    at WebSocketClient.<anonymous> (/home/runner/workspace/node_modules/.pnpm/@whiskeysockets+baileys@7.0.0-rc.9/node_modules/@whiskeysockets/baileys/src/Socket/socket.ts:959:7)\n    at WebSocketClient.emit (node:events:508:28)\n    at <anonymous> (/home/runner/workspace/node_modules/.pnpm/@whiskeysockets+baileys@7.0.0-rc.9/node_modules/@whiskeysockets/baileys/src/Socket/socket.ts:599:23)\n    at Object.decodeFrame (/home/runner/workspace/node_modules/.pnpm/@whiskeysockets+baileys@7.0.0-rc.9/node_modules/@whiskeysockets/baileys/src/Utils/noise-handler.ts:187:5)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async WebSocketClient.onMessageReceived (/home/runner/workspace/node_modules/.pnpm/@whiskeysockets+baileys@7.0.0-rc.9/node_modules/@whiskeysockets/baileys/src/Socket/socket.ts:570:3)"
+[22:47:32.489] [33mWARN[39m (3433): [36mWhatsApp disconnected[39m
+    [35mshouldReconnect[39m: true
+[22:47:34.353] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 45,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:47:34.967] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 46,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:47:37.511] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 47,
+      "method": "GET",
+      "url": "/api/products"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 11
+[22:47:37.629] [32mINFO[39m (3433): [36mconnected to WA[39m
+    [35mbrowser[39m: [
+      "Bot Inteligente",
+      "Chrome",
+      "1.0.0"
+    ]
+    [35mhelloMsg[39m: {
+      "clientHello": {
+        "ephemeral": "xxJjgPGpfqCn1wuE51cOTcbPzB+HX0qVEopP0DDjoDQ="
+      }
+    }
+[22:47:37.664] [32mINFO[39m (3433): [36mlogging in...[39m
+    [35mnode[39m: {
+      "username": "573042748709",
+      "passive": true,
+      "userAgent": {
+        "platform": "WEB",
+        "appVersion": {
+          "primary": 2,
+          "secondary": 3000,
+          "tertiary": 1035194821
+        },
+        "mcc": "000",
+        "mnc": "000",
+        "osVersion": "0.1",
+        "device": "Desktop",
+        "osBuildNumber": "0.1",
+        "releaseChannel": "RELEASE",
+        "localeLanguageIso6391": "en",
+        "localeCountryIso31661Alpha2": "US"
+      },
+      "webInfo": {
+        "webSubPlatform": "WEB_BROWSER"
+      },
+      "connectType": "WIFI_UNKNOWN",
+      "connectReason": "USER_ACTIVATED",
+      "device": 14,
+      "pull": true,
+      "lidDbMigrated": false
+    }
+[22:47:38.421] [32mINFO[39m (3433): [36m0 pre-keys found on server[39m
+[22:47:38.421] [32mINFO[39m (3433): [36mCurrent prekey ID: 0, exists in storage: false[39m
+[22:47:38.421] [32mINFO[39m (3433): [36mUploading PreKeys due to: server count low (0)[39m
+[22:47:38.422] [32mINFO[39m (3433): [36muploading pre-keys[39m
+    [35mcount[39m: 812
+    [35mretryCount[39m: 0
+[22:47:38.861] [32mINFO[39m (3433): [36muploaded pre-keys successfully[39m
+    [35mcount[39m: 812
+[22:47:38.921] [32mINFO[39m (3433): [36mhandled 0 offline messages/notifications[39m
+[22:47:38.922] [32mINFO[39m (3433): [36mConnection is now AwaitingInitialSync, buffering events[39m
+[22:47:38.922] [32mINFO[39m (3433): [36mHistory sync is disabled by config, not waiting for notification. Transitioning to Online.[39m
+[22:47:38.998] [32mINFO[39m (3433): [36mopened connection to WA[39m
+[22:47:39.000] [32mINFO[39m (3433): [36mWhatsApp connected[39m
+    [35mphone[39m: "573042748709"
+[22:47:39.003] [32mINFO[39m (3433): [36mOwn LID session created successfully[39m
+    [35mmyPN[39m: "573042748709:14@s.whatsapp.net"
+    [35mmyLID[39m: "34579469598873:14@lid"
+[22:47:39.361] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 48,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 200
+    }
+    [35mresponseTime[39m: 0
+[22:47:39.927] [32mINFO[39m (3433): [36minjecting new app state sync keys[39m
+    [35mnewAppStateSyncKeyId[39m: "AAAAAJ73"
+    [35mnewKeys[39m: [
+      "AAAAAJ73"
+    ]
+[22:47:41.019] [32mINFO[39m (3433): [36mgot history notification[39m
+    [35mhistNotification[39m: {
+      "fileLength": "0",
+      "syncType": "INITIAL_STATUS_V3",
+      "initialHistBootstrapInlinePayload": "eAHjYAQAABMACg=="
+    }
+    [35mprocess[39m: false
+    [35mid[39m: "A578315F39E092A5459CCD10DB0D3889"
+    [35misLatest[39m: true
+[22:47:41.562] [32mINFO[39m (3433): [36mresyncing regular_low from v0[39m
+[22:47:41.817] [32mINFO[39m (3433): [36mrestored state of regular_low from snapshot to v3 with mutations[39m
+[22:47:41.818] [32mINFO[39m (3433): [36msynced regular_low to v4[39m
+[22:47:41.821] [32mINFO[39m (3433): [36marchive setting updated => 'false'[39m
+[22:47:41.821] [32mINFO[39m (3433): [36mresyncing regular from v0[39m
+[22:47:42.086] [32mINFO[39m (3433): [36mrestored state of regular from snapshot to v2 with mutations[39m
+[22:47:42.087] [32mINFO[39m (3433): [36msynced regular to v3[39m
+[22:47:42.094] [32mINFO[39m (3433): [36mgot history notification[39m
+    [35mhistNotification[39m: {
+      "fileLength": "0",
+      "syncType": "PUSH_NAME",
+      "chunkOrder": 1,
+      "initialHistBootstrapInlinePayload": "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"
+    }
+    [35mprocess[39m: false
+    [35mid[39m: "A52D7472DDAA7BD0A2FBAB95EB816AEF"
+    [35misLatest[39m: true
+[22:47:42.173] [32mINFO[39m (3433): [36mgot history notification[39m
+    [35mhistNotification[39m: {
+      "fileSha256": "mfagG8rkpIx++S7RqW8bBlhtanhpEDb084XZRLWz/2I=",
+      "fileLength": "214063",
+      "mediaKey": "TlPBinOPuo7kaf6Iztz6MehWWZVs6GX4gmh8FMShuZQ=",
+      "fileEncSha256": "nbAoO1cvh2YFoBhFpRNJkWW/IMgpYwoMCXTMCAAgcKg=",
+      "directPath": "/v/t62.31111-24/603970775_1287426370024702_3421606655628056962_n.enc?ccb=11-4&oh=01_Q5Aa4AETT-duZly4phTDTvPdy2X6OVn99z2A9ii_0fG19euaOg&oe=69E93C2E&_nc_sid=5e03e0",
+      "syncType": "INITIAL_BOOTSTRAP",
+      "encHandle": "AQLRQmEtjWkj1DF43i5DojJYCtFVjd3X5_h_mFFSdYcWP8LCNT4LylHEBU7LReK_9xxJ49q-5Nqalm4qTzbZgrRMR89BJfv_LV3caxElKEEhZWrvjwv7XyDKYcV-w5FHYL8"
+    }
+    [35mprocess[39m: false
+    [35mid[39m: "A54ECA13380BBEE7262F583DCEB93D18"
+    [35misLatest[39m: true
+[22:47:42.384] [32mINFO[39m (3433): [36mgot history notification[39m
+    [35mhistNotification[39m: {
+      "fileSha256": "NxNmy97OHVTpvjaj19/Vo++VySfHtgIDK0kiyd3fjo8=",
+      "fileLength": "10",
+      "mediaKey": "qT87/WQnyN1R+nqF5SxLbruQcwE9yiXseLhZ/3KfYHk=",
+      "fileEncSha256": "ly5Q4lQVYo3LCCCZBJcMJ9SOmncd9yi2eKctriCUeic=",
+      "directPath": "/v/t62.31111-24/613506431_4168259980079679_6012947104642481763_n.enc?ccb=11-4&oh=01_Q5Aa4AHAp54t1spnzsRa-W57pU_sy7eTDMC5BrmNc64QwbEGyg&oe=69E94EE3&_nc_sid=5e03e0",
+      "syncType": "NON_BLOCKING_DATA",
+      "encHandle": "AQJPUYMX1iGwInAcj9RySkcPcIm53FF7VnYsvdKOOJvD1oeEONGtc-qOIPVfKWok8LLsqXGiXrx1gXPPYhs9-WbhHXaITJnLadwuiF6ECm6RS5kr0NbVsyM_8G1UFRXy1n0"
+    }
+    [35mprocess[39m: false
+    [35mid[39m: "A5C7933C623A15A3F26B6DB818169DC1"
+    [35misLatest[39m: true
+[22:47:44.710] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 49,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:47:45.290] [32mINFO[39m (3433): [36mgot history notification[39m
+    [35mhistNotification[39m: {
+      "fileSha256": "y5bExOrhkguGAJN4YxbV3LG7dI3q6drpKJ9ETdqDHG0=",
+      "fileLength": "71020",
+      "mediaKey": "n+o2cS+EOVXHABPYZYZ+Vwn8zxKiSc7AX0jneYucRyw=",
+      "fileEncSha256": "b9B4Cp/oC1d2WXFcbECVbZCbZl9Hy3g1B4PLVWENj4g=",
+      "directPath": "/v/t62.31111-24/609785239_34683212651324275_7331292392917239943_n.enc?ccb=11-4&oh=01_Q5Aa4AHunYcxEV9kHtIlubHV_fc-EZPANH8yl0KpjfJNt97BdA&oe=69E923A3&_nc_sid=5e03e0",
+      "syncType": "RECENT",
+      "chunkOrder": 1,
+      "progress": 100,
+      "oldestMsgInChunkTimestampSec": "1770862708",
+      "encHandle": "AQIxnsTmkXSxL8iK8HZX_YzIBlc-CKbr8a5A5F024mGU9VFftKh49cZHo6Qm2rQF7btCfrSYJ0WQvefHsKNqNBZzSt5q2BTWId41VeiYTUQ8y_xTNnhISd7iZUw0cicKhx0"
+    }
+    [35mprocess[39m: false
+    [35mid[39m: "A599A64AF34C1CD46230F2791CCD30B2"
+    [35misLatest[39m: true
+[22:47:49.731] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 50,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:47:54.713] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 51,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[22:47:59.716] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 52,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[22:48:04.727] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 53,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:48:09.712] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 54,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[22:48:14.710] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 55,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[22:48:19.727] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 56,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[22:48:24.713] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 57,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:48:29.724] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 58,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:48:34.726] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 59,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:48:39.720] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 60,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:49:21.741] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 61,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:49:55.649] [32mINFO[39m (3433): [36mWhatsApp message received[39m
+    [35mphone[39m: "6988129931330"
+    [35mtext[39m: "Hola muy buenas"
+[22:49:58.256] [32mINFO[39m (3433): [36mResponse sent[39m
+    [35mphone[39m: "6988129931330"
+    [35magent[39m: "sales"
+    [35mintent[39m: "desconocido"
+[22:50:21.759] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 62,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[22:51:21.775] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 63,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[22:52:21.752] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 64,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[22:53:21.745] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 65,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:54:23.167] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 66,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[22:55:21.763] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 67,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[22:56:21.761] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 68,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:57:21.752] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 69,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:58:21.762] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 70,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[22:59:21.740] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 71,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[23:00:21.749] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 72,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[23:01:21.735] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 73,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[23:01:45.314] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 74,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[23:01:49.705] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 75,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[23:01:54.703] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 76,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[23:01:59.715] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 77,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[23:02:04.735] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 78,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[23:02:09.701] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 79,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[23:02:14.712] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 80,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[23:02:19.701] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 81,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[23:02:24.702] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 82,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[23:02:29.735] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 83,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[23:02:34.702] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 84,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[23:02:39.710] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 85,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[23:02:44.712] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 86,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[23:03:21.741] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 87,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[23:04:22.808] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 88,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[23:06:16.274] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 89,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[23:06:21.816] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 90,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[23:07:21.758] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 91,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[00:06:37.682] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 92,
+      "method": "GET",
+      "url": "/api/metrics/intents"
+    }
+    [35mres[39m: {
+      "statusCode": 200
+    }
+    [35mresponseTime[39m: 22
+[00:06:37.689] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 93,
+      "method": "GET",
+      "url": "/api/metrics/dashboard"
+    }
+    [35mres[39m: {
+      "statusCode": 200
+    }
+    [35mresponseTime[39m: 28
+[00:06:37.690] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 94,
+      "method": "GET",
+      "url": "/api/conversations"
+    }
+    [35mres[39m: {
+      "statusCode": 200
+    }
+    [35mresponseTime[39m: 23
+[00:06:37.727] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 95,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[00:06:42.669] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 96,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[00:06:47.682] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 97,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0
+[00:06:52.672] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 98,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 1
+[00:06:57.673] [32mINFO[39m (3433): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 99,
+      "method": "GET",
+      "url": "/api/whatsapp/status"
+    }
+    [35mres[39m: {
+      "statusCode": 304
+    }
+    [35mresponseTime[39m: 0

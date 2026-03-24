@@ -3,13 +3,56 @@ import makeWASocket, {
   DisconnectReason,
   fetchLatestBaileysVersion,
   makeCacheableSignalKeyStore,
+  downloadMediaMessage,
   type WASocket,
 } from "@whiskeysockets/baileys";
 import { Boom } from "@hapi/boom";
-import { mkdirSync, existsSync } from "fs";
+import { mkdirSync, existsSync, writeFileSync, unlinkSync, createReadStream, rmSync } from "fs";
 import { join } from "path";
 import { handleMessage } from "../core/router.js";
 import { logger } from "../lib/logger.js";
+import OpenAI from "openai";
+import { db } from "@workspace/db";
+import { botConfigTable } from "@workspace/db/schema";
+import { eq } from "drizzle-orm";
+
+async function transcribeAudio(buffer: Buffer): Promise<string> {
+  const openai = new OpenAI({
+    apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+  });
+
+  const tmpFile = join(process.cwd(), `tmp_audio_${Date.now()}.ogg`);
+  try {
+    writeFileSync(tmpFile, buffer);
+    const transcription = await openai.audio.transcriptions.create({
+      file: createReadStream(tmpFile),
+      model: "whisper-1",
+    });
+    return transcription.text;
+  } catch (err) {
+    logger.error({ err }, "Transcription error");
+    return "";
+  } finally {
+    try { if (existsSync(tmpFile)) unlinkSync(tmpFile); } catch {}
+  }
+}
+
+async function generateVoice(text: string): Promise<Buffer | null> {
+  const openai = new OpenAI({
+    apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+  });
+  try {
+    const mp3 = await openai.audio.speech.create({
+      model: "tts-1",
+      voice: "alloy",
+      input: text,
+    });
+    return Buffer.from(await mp3.arrayBuffer());
+  } catch (err) {
+    logger.error({ err }, "TTS error");
+    return null;
+  }
+}
 
 const AUTH_DIR = join(process.cwd(), "whatsapp_auth");
 
@@ -26,6 +69,18 @@ let isConnected = false;
 let isConnecting = false;
 let connectedPhone: string | null = null;
 let reconnectTimer: NodeJS.Timeout | null = null;
+let healthCheckTimer: NodeJS.Timeout | null = null;
+
+function startHealthCheck() {
+  if (healthCheckTimer) clearInterval(healthCheckTimer);
+  healthCheckTimer = setInterval(() => {
+    if (isConnected && (!sock || !sock.user)) {
+      logger.warn("WhatsApp connection lost in health check, reconnecting...");
+      isConnected = false;
+      connect();
+    }
+  }, 30000);
+}
 
 export function getStatus(): WhatsAppStatus {
   return {
@@ -37,7 +92,10 @@ export function getStatus(): WhatsAppStatus {
 }
 
 export async function connect(): Promise<void> {
-  if (isConnecting && isConnected) return;
+  if (isConnected || isConnecting) {
+    logger.info("WhatsApp already connected or connecting, skipping...");
+    return;
+  }
 
   if (!existsSync(AUTH_DIR)) mkdirSync(AUTH_DIR, { recursive: true });
 
@@ -76,22 +134,36 @@ export async function connect(): Promise<void> {
         qrCode = null;
         connectedPhone = sock?.user?.id?.split(":")[0] || null;
         logger.info({ phone: connectedPhone }, "WhatsApp connected");
+        startHealthCheck();
       }
 
       if (connection === "close") {
         isConnected = false;
         connectedPhone = null;
-        const shouldReconnect =
-          (lastDisconnect?.error as Boom)?.output?.statusCode !==
-          DisconnectReason.loggedOut;
+        qrCode = null;
+        
+        const statusCode = (lastDisconnect?.error as Boom)?.output?.statusCode;
+        const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
 
-        logger.warn({ shouldReconnect }, "WhatsApp disconnected");
+        logger.warn({ shouldReconnect, statusCode }, "WhatsApp disconnected");
 
         if (shouldReconnect) {
           if (reconnectTimer) clearTimeout(reconnectTimer);
-          reconnectTimer = setTimeout(() => connect(), 5000);
+          reconnectTimer = setTimeout(() => connect(), 7000);
         } else {
           isConnecting = false;
+          // Trigger a new connection attempt after a short delay to generate a new QR automatically
+          logger.info("Logged out detected, requesting new QR in 3s...");
+          setTimeout(() => {
+            // Clear credentials before trying to get a new QR on logout
+            try { 
+              if (existsSync(AUTH_DIR)) {
+                rmSync(AUTH_DIR, { recursive: true, force: true });
+                mkdirSync(AUTH_DIR, { recursive: true });
+              }
+            } catch(e) {}
+            connect(); 
+          }, 3000);
         }
       }
     });
@@ -106,25 +178,61 @@ export async function connect(): Promise<void> {
         if (!jid || jid.endsWith("@g.us")) continue; // skip group messages
 
         const phone = jid.split("@")[0];
-        const text =
+        const botConfig = await db.query.botConfigTable.findFirst();
+        let text =
           msg.message?.conversation ||
           msg.message?.extendedTextMessage?.text ||
           msg.message?.imageMessage?.caption ||
           "";
 
-        if (!text.trim()) continue;
+        // Handle Audio/Voice Notes
+        if (!text && (msg.message?.audioMessage || msg.message?.videoMessage)) {
+          try {
+            const buffer = await downloadMediaMessage(
+              msg, 
+              "buffer", 
+              {}, 
+              { 
+                logger: logger as never,
+                reuploadRequest: sock!.updateMediaMessage 
+              }
+            ) as Buffer;
+            if (buffer) {
+              const transcription = await transcribeAudio(buffer);
+              if (transcription) {
+                text = transcription;
+                logger.info({ phone, text }, "WhatsApp audio transcribed");
+              }
+            }
+          } catch (err) {
+            logger.error({ err, phone }, "Failed to process audio message");
+          }
+        }
+
+        if (!text || !text.trim()) continue;
 
         logger.info({ phone, text }, "WhatsApp message received");
 
-        try {
-          const result = await handleMessage(phone, text);
-          if (result.response && sock) {
-            await sock.sendMessage(jid, { text: result.response });
-            logger.info({ phone, agent: result.agent, intent: result.intent }, "Response sent");
+          try {
+            const result = await handleMessage(phone, text, msg.pushName || undefined);
+            if (result.response && sock) {
+              const isAudioInput = msg.message?.audioMessage;
+              if (isAudioInput) { 
+                const voiceBuffer = await generateVoice(result.response);
+                if (voiceBuffer) {
+                  await sock.sendMessage(jid, { audio: voiceBuffer, mimetype: "audio/mp4", ptt: true });
+                  logger.info({ phone }, "Voice response sent");
+                } else {
+                  await sock.sendMessage(jid, { text: result.response });
+                }
+              } else {
+                await sock.sendMessage(jid, { text: result.response });
+              }
+              logger.info({ phone, agent: result.agent, intent: result.intent }, "Response sent");
+            }
+          } catch (err) {
+            logger.error({ err, phone }, "Error processing WhatsApp message");
           }
-        } catch (err) {
-          logger.error({ err, phone }, "Error processing WhatsApp message");
-        }
       }
     });
   } catch (err) {
@@ -135,8 +243,9 @@ export async function connect(): Promise<void> {
 
 export async function disconnect(): Promise<void> {
   if (reconnectTimer) clearTimeout(reconnectTimer);
+  if (healthCheckTimer) clearInterval(healthCheckTimer);
   if (sock) {
-    await sock.logout();
+    try { await sock.logout(); } catch { /* ignore */ }
     sock = null;
   }
   isConnected = false;

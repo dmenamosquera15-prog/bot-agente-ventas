@@ -17,6 +17,9 @@ import AiProviders from "@/pages/AiProviders";
 import ImportProducts from "@/pages/ImportProducts";
 import GitSync from "@/pages/GitSync";
 import GitHubCopilot from "@/pages/GitHubCopilot";
+import AdminCopilot from "@/pages/AdminCopilot";
+import Landing from "@/pages/Landing";
+import Auth from "@/pages/Auth";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { refetchOnWindowFocus: false, staleTime: 5000, retry: 1 } },
@@ -24,24 +27,31 @@ const queryClient = new QueryClient({
 
 function Router() {
   return (
-    <Layout>
-      <Switch>
-        <Route path="/" component={Dashboard} />
-        <Route path="/whatsapp" component={WhatsApp} />
-        <Route path="/chat" component={ChatTest} />
-        <Route path="/conversations" component={Conversations} />
-        <Route path="/clients" component={Clients} />
-        <Route path="/products" component={Products} />
-        <Route path="/products/import" component={ImportProducts} />
-        <Route path="/agents" component={Agents} />
-        <Route path="/agents/edit" component={AgentsEditor} />
-        <Route path="/ai-providers" component={AiProviders} />
-        <Route path="/git-sync" component={GitSync} />
-        <Route path="/github-copilot" component={GitHubCopilot} />
-        <Route path="/config" component={Config} />
-        <Route component={NotFound} />
-      </Switch>
-    </Layout>
+    <Switch>
+      <Route path="/landing" component={Landing} />
+      <Route path="/auth" component={Auth} />
+      <Route>
+        <Layout>
+          <Switch>
+            <Route path="/" component={Dashboard} />
+            <Route path="/whatsapp" component={WhatsApp} />
+            <Route path="/chat" component={ChatTest} />
+            <Route path="/conversations" component={Conversations} />
+            <Route path="/clients" component={Clients} />
+            <Route path="/products" component={Products} />
+            <Route path="/products/import" component={ImportProducts} />
+            <Route path="/agents" component={Agents} />
+            <Route path="/agents/edit" component={AgentsEditor} />
+            <Route path="/ai-providers" component={AiProviders} />
+            <Route path="/git-sync" component={GitSync} />
+            <Route path="/github-copilot" component={GitHubCopilot} />
+            <Route path="/admin-copilot" component={AdminCopilot} />
+            <Route path="/config" component={Config} />
+            <Route component={NotFound} />
+          </Switch>
+        </Layout>
+      </Route>
+    </Switch>
   );
 }
 

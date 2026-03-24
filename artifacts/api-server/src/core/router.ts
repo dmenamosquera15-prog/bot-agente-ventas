@@ -1,16 +1,8 @@
-import { classifyIntent, generateResponse } from "../services/aiService.js";
+import { classifyIntent, generateResponse, orchestrate, searchRelevantProducts } from "../services/aiService.js";
 import { db } from "@workspace/db";
-import { clientsTable, conversationsTable, botConfigTable, productsTable, agentsTable } from "@workspace/db/schema";
-import { eq, desc, ilike, and } from "drizzle-orm";
-
-const AGENT_INTENT_MAP: Record<string, string> = {
-  saludo: "sales", despedida: "sales", consulta_precio: "sales",
-  consulta_producto: "sales", compra: "sales", objecion_precio: "sales",
-  metodo_pago: "sales", desconocido: "sales", comparacion: "technical",
-  especificacion_tecnica: "technical", soporte: "support", reclamo: "support",
-  facturacion: "admin", ubicacion: "admin", horario: "admin",
-  exportacion: "admin", importacion: "admin", envio_internacional: "admin", pedido: "admin",
-};
+import { clientsTable, conversationsTable, botConfigTable, productsTable, agentsTable, conversationKnowledgeTable } from "@workspace/db/schema";
+import { eq, desc, ilike, and, or, sql } from "drizzle-orm";
+import { logger } from "../lib/logger.js";
 
 async function getAgentPrompt(agentKey: string, fallback: string): Promise<string> {
   try {
@@ -46,21 +38,71 @@ async function getProductContext(entities: Record<string, string>) {
   try {
     let products: typeof productsTable.$inferSelect[] = [];
     const { category, product, brand } = entities;
+    
     if (category || product || brand) {
       const conds = [];
       if (category) conds.push(ilike(productsTable.category, `%${category}%`));
       if (brand) conds.push(ilike(productsTable.name, `%${brand}%`));
-      if (product) conds.push(ilike(productsTable.name, `%${product}%`));
+      
+      if (product) {
+        const keywords = product.split(/\s+/).filter(k => k.length > 2);
+        if (keywords.length > 0) {
+          const productConds = keywords.map(kw => ilike(productsTable.name, `%${kw}%`));
+          conds.push(and(...productConds));
+        } else {
+          conds.push(ilike(productsTable.name, `%${product}%`));
+        }
+      }
+      
       products = await db.select().from(productsTable).where(conds.length ? and(...conds, eq(productsTable.isActive, true)) : eq(productsTable.isActive, true)).limit(5);
+      
+      if (!products.length && product) {
+        const keywords = product.split(/\s+/).filter(k => k.length > 2);
+        if (keywords.length > 0) {
+          const productOrConds = keywords.map(kw => ilike(productsTable.name, `%${kw}%`));
+          products = await db.select().from(productsTable).where(and(or(...productOrConds), eq(productsTable.isActive, true))).limit(5);
+        }
+      }
     }
+    
     if (!products.length) {
       products = await db.select().from(productsTable).where(eq(productsTable.isActive, true)).limit(6);
     }
+    
     if (!products.length) return "";
-    return `PRODUCTOS DISPONIBLES EN INVENTARIO:\n${products.map(p =>
-      `• ${p.name} | Precio: $${p.price} USD | Categoría: ${p.category}${p.brand ? " | Marca: " + p.brand : ""} | Stock: ${p.stock} unidades${p.description ? "\n  Descripción: " + p.description : ""}${p.imageUrl ? "\n  Imagen: " + p.imageUrl : ""}`
+    return `CATÁLOGO DISPONIBLE:\n${products.map(p =>
+      `• ${p.name} | Precio: $${p.price} USD | Categoría: ${p.category}${p.brand ? " | Marca: " + p.brand : ""} | Stock: ${p.stock} unidades${p.description ? "\n  Detalles: " + p.description : ""}`
     ).join("\n")}`;
-  } catch { return ""; }
+  } catch (err) { 
+    logger.error({ err }, "Error fetching product context");
+    return ""; 
+  }
+}
+
+async function getKnowledgeContext(query: string) {
+  try {
+    const keywords = query.split(/\s+/).filter(k => k.length > 3);
+    if (keywords.length === 0) return "";
+
+    const conds = keywords.map(kw => or(
+      ilike(conversationKnowledgeTable.userQuery, `%${kw}%`),
+      ilike(conversationKnowledgeTable.botResponse, `%${kw}%`)
+    ));
+
+    const kb = await db.select()
+      .from(conversationKnowledgeTable)
+      .where(or(...conds))
+      .limit(3);
+
+    if (!kb.length) return "";
+
+    return `INFORMACIÓN ADICIONAL DE BASE DE CONOCIMIENTO:\n${kb.map(k => 
+      `Pregunta Frecuente: ${k.userQuery}\nRespuesta Sugerida: ${k.botResponse}`
+    ).join("\n---\n")}`;
+  } catch (err) {
+    logger.error({ err }, "Error fetching knowledge context");
+    return "";
+  }
 }
 
 export async function handleMessage(phone: string, message: string, clientName?: string) {
@@ -68,48 +110,87 @@ export async function handleMessage(phone: string, message: string, clientName?:
   const [client, botConfig] = await Promise.all([getOrCreateClient(phone, clientName), getBotConfig()]);
 
   if (!botConfig.isActive) {
-    return { response: "El servicio está temporalmente suspendido. Contáctanos por otro canal.", intent: "desconocido", agent: "none", confidence: 0, clientId: String(client.id), processingTime: Date.now() - start };
+    return { response: "El servicio está temporalmente suspendido.", intent: "desconocido", agent: "none", confidence: 0, clientId: String(client.id), processingTime: Date.now() - start };
   }
 
-  const intentData = await classifyIntent(message);
-  const agentKey = AGENT_INTENT_MAP[intentData.intent] || "sales";
+  // 1. Fetch History
   const history = await getHistory(client.id, botConfig.maxContextMessages);
-  const productContext = await getProductContext(intentData.entities);
+  const intentData = await classifyIntent(message);
 
-  const fallbackPrompt = `Eres ${botConfig.botName}, asistente de ${botConfig.businessName} (${botConfig.businessType}).
+  // 2. SEARCH FOR PRODUCTS: Smart AI-driven search
+  const allActiveProducts = await db.select({ name: productsTable.name }).from(productsTable).where(eq(productsTable.isActive, true));
+  const productNames = allActiveProducts.map(p => p.name);
+  
+  const relevantProductNames = await searchRelevantProducts(message, productNames);
+  let productContext = "";
+
+  if (relevantProductNames.length > 0) {
+    const products = await db.select().from(productsTable).where(
+      and(sql`${productsTable.name} IN (${sql.join(relevantProductNames.map(n => sql`${n}`), sql`, `)})`, eq(productsTable.isActive, true))
+    ).limit(5);
+    
+    productContext = `PRODUCTOS RELEVADOS PARA ESTA CONSULTA:\n${products.map(p =>
+      `• ${p.name} | Precio: $${p.price} USD | Detalles: ${p.description || "N/A"}`
+    ).join("\n")}`;
+  } else {
+    productContext = await getProductContext(intentData.entities);
+  }
+
+  const knowledgeContext = await getKnowledgeContext(message);
+
+  // 3. ORCHESTRATE: Decide which specialized agent should respond
+  // Use category summary for orchestrator
+  const categories = [...new Set(allActiveProducts.map(p => p.name))].slice(0, 10).join(", "); // Simplified context
+  const businessSummary = `NEGOCIO: ${botConfig.businessName}. CATALOGO: ${categories}.`;
+  const agentKey = await orchestrate(message, history, businessSummary);
+
+  const fallbackPrompt = `Eres ${botConfig.botName}, asistente de ${botConfig.businessName}.
 ${botConfig.personality}
-USA los productos disponibles para dar respuestas precisas y naturales. NUNCA inventes productos o precios.
-Métodos de pago: ${botConfig.paymentMethods}. Horario: ${botConfig.workingHours}.
-Habla de forma natural, cálida y profesional. NUNCA robótico. Máximo 3 párrafos.`;
+Habla de forma natural, cálida y profesional. NUNCA robótico.`;
 
+  // 4. Get the specialized system prompt
   const systemPrompt = await getAgentPrompt(agentKey, fallbackPrompt);
+  
   const fullPrompt = `${systemPrompt}
 
 NEGOCIO: ${botConfig.businessName} | TIPO: ${botConfig.businessType}
-MÉTODOS DE PAGO: ${botConfig.paymentMethods}
 HORARIO: ${botConfig.workingHours}
 ${clientName || client.name ? `CLIENTE: ${clientName || client.name}` : ""}
-INSTRUCCIÓN CRÍTICA: USA la información real de productos que se te da. No inventes datos.`;
+CONTEXTO DE LA CONSULTA:
+${productContext}
+${knowledgeContext}
+
+INSTRUCCIÓN: Sé lo más ESPECÍFICO posible. Si el cliente pregunta por UN producto en particular, respóndele únicamente sobre ese producto. No le ofrezcas "mega packs" o listas irrelevantes si ya encontraste lo que buscaba. Organiza la información de forma clara, atractiva y profesional.`;
 
   let response: string;
   try {
-    response = await generateResponse(fullPrompt, productContext, message, history);
+    const combinedContext = `${productContext}\n\n${knowledgeContext}`.trim();
+    response = await generateResponse(fullPrompt, combinedContext, message, history);
   } catch {
     response = botConfig.fallbackMessage;
   }
 
+  // Save to history
   await db.insert(conversationsTable).values([
     { clientId: client.id, role: "user", message, intent: intentData.intent, agent: agentKey, confidence: intentData.confidence },
     { clientId: client.id, role: "bot", message: response, intent: intentData.intent, agent: agentKey, confidence: intentData.confidence },
   ]);
 
+  // Update lead status
   let newProbability = client.purchaseProbability || 0;
-  if (["compra", "consulta_precio", "metodo_pago", "pedido"].includes(intentData.intent)) newProbability = Math.min(100, newProbability + 10);
+  if (["compra", "pedido"].includes(intentData.intent) || agentKey === "cierre") newProbability = Math.min(100, newProbability + 20);
+  
   let leadStatus = client.leadStatus;
   if (newProbability >= 70) leadStatus = "hot";
   else if (newProbability >= 40) leadStatus = "warm";
 
-  await db.update(clientsTable).set({ totalInteractions: (client.totalInteractions || 0) + 1, purchaseProbability: newProbability, leadStatus, lastInteraction: new Date(), name: clientName || client.name }).where(eq(clientsTable.id, client.id));
+  await db.update(clientsTable).set({ 
+    totalInteractions: (client.totalInteractions || 0) + 1, 
+    purchaseProbability: newProbability, 
+    leadStatus, 
+    lastInteraction: new Date(), 
+    name: clientName || client.name || "Cliente WhatsApp"
+  }).where(eq(clientsTable.id, client.id));
 
   return { response, intent: intentData.intent, agent: agentKey, confidence: intentData.confidence, clientId: String(client.id), processingTime: Date.now() - start };
 }

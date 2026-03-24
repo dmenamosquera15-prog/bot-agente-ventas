@@ -1,0 +1,34 @@
+
+> @workspace/bot-dashboard@0.0.0 dev /home/runner/workspace/artifacts/bot-dashboard
+> vite --config vite.config.ts --host 0.0.0.0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J
+  [32m[1mVITE[22m v7.3.1[39m  [2mready in [0m[1m836[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m25712[22m/[39m
+  [32m➜[39m  [1mNetwork[22m: [36mhttp://172.31.73.2:[1m25712[22m/[39m
+[2m[32m  ➜[39m[22m[2m  press [22m[1mh + enter[22m[2m to show help[22m
+[RUNTIME_ERROR]{"type":"runtime-error","timestamp":1774064416230,"name":"Error","message":"motion is not defined","stack":"    at ChatTest /home/runner/workspace/artifacts/bot-dashboard/src/pages/ChatTest.tsx:205:18\n\n\n\n\n\n\n\n\n","loc":{"line":205,"column":18,"file":"/home/runner/workspace/artifacts/bot-dashboard/src/pages/ChatTest.tsx"},"frame":"203|                </div>\n204|                <div className=\"w-full h-1.5 bg-secondary rounded-full mt-3 overflow-hidden\">\n205|                  <motion.div \n   |                   ^\n206|                    initial={{ width: 0 }}\n207|                    animate={{ width: `${(lastBotMessage.meta.confidence || 0) * 100}%` }}"}
