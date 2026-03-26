@@ -8,7 +8,9 @@ FROM base AS build
 COPY . /usr/src/app
 WORKDIR /usr/src/app
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+# Construimos tanto el API (bot) como el Dashboard
 RUN pnpm --filter @workspace/api-server build
+RUN pnpm --filter @workspace/bot-dashboard build
 
 FROM base AS runner
 WORKDIR /usr/src/app
