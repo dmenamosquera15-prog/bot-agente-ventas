@@ -2,12 +2,30 @@ import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import {
-  LayoutDashboard, MessageSquare, Users, Package, Bot, Settings,
-  Menu, X, Smartphone, MessagesSquare, ChevronRight, Upload, Cpu, BrainCircuit, Github, Sparkle,
+  LayoutDashboard,
+  MessageSquare,
+  Users,
+  Package,
+  Bot,
+  Settings,
+  Menu,
+  X,
+  Smartphone,
+  MessagesSquare,
+  ChevronRight,
+  Upload,
+  Cpu,
+  BrainCircuit,
+  Github,
+  Sparkle,
+  Crown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface WaStatus { connected: boolean; phone: string | null; }
+interface WaStatus {
+  connected: boolean;
+  phone: string | null;
+}
 
 const NAV = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -17,16 +35,27 @@ const NAV = [
   { href: "/clients", label: "Clientes", icon: Users },
   { label: "─", divider: true },
   { href: "/products", label: "Productos", icon: Package },
-  { href: "/products/import", label: "Importar Productos", icon: Upload, indent: true },
+  {
+    href: "/products/import",
+    label: "Importar Productos",
+    icon: Upload,
+    indent: true,
+  },
   { href: "/agents/edit", label: "Agentes IA", icon: Bot },
   { href: "/ai-providers", label: "Proveedores IA", icon: Cpu },
-  { href: "/github-copilot", label: "GitHub Copilot", icon: BrainCircuit, indent: true },
+  {
+    href: "/github-copilot",
+    label: "GitHub Copilot",
+    icon: BrainCircuit,
+    indent: true,
+  },
   { href: "/admin-copilot", label: "Admin Co-Pilot", icon: Sparkle },
   { href: "/git-sync", label: "GitHub Sync", icon: Github },
   { label: "─", divider: true },
+  { href: "/membership", label: "Membresía", icon: Crown },
   { href: "/config", label: "Configuración", icon: Settings },
   { label: "─", divider: true },
-  { href: "/auth", label: "Cerrar Sesión", icon: X },
+  { action: "logout", label: "Cerrar Sesión", icon: X },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -36,7 +65,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const poll = async () => {
-      try { const r = await fetch("/api/whatsapp/status"); const d = await r.json(); setWa({ connected: d.connected, phone: d.phone }); } catch { /* ignore */ }
+      try {
+        const r = await fetch("/api/whatsapp/status");
+        const d = await r.json();
+        setWa({ connected: d.connected, phone: d.phone });
+      } catch {
+        /* ignore */
+      }
     };
     poll();
     const id = setInterval(poll, 5000);
@@ -45,28 +80,59 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
-      <button className="lg:hidden fixed top-4 right-4 z-50 p-2 bg-card border border-border rounded-lg shadow-lg" onClick={() => setOpen(!open)}>
+      <button
+        className="lg:hidden fixed top-4 right-4 z-50 p-2 bg-card border border-border rounded-lg shadow-lg"
+        onClick={() => setOpen(!open)}
+      >
         {open ? <X size={20} /> : <Menu size={20} />}
       </button>
 
-      <aside className={cn("fixed inset-y-0 left-0 z-40 flex flex-col bg-card border-r border-border/50 shadow-xl transition-transform duration-300 lg:translate-x-0", open ? "translate-x-0" : "-translate-x-full")} style={{ width: 256 }}>
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-40 flex flex-col bg-card border-r border-border/50 shadow-xl transition-transform duration-300 lg:translate-x-0",
+          open ? "translate-x-0" : "-translate-x-full",
+        )}
+        style={{ width: 256 }}
+      >
         {/* Brand */}
         <div className="p-5 flex items-center gap-3 border-b border-border/50 shrink-0">
           <div className="w-8 h-8 rounded-xl bg-[#25D366] flex items-center justify-center">
             <BrainCircuit className="text-white" size={18} />
           </div>
           <div>
-            <h1 className="font-bold text-sm text-foreground leading-none">Bot Inteligente</h1>
-            <p className="text-[10px] text-[#25D366] uppercase tracking-widest mt-0.5">Panel de Control</p>
+            <h1 className="font-bold text-sm text-foreground leading-none">
+              Bot Inteligente
+            </h1>
+            <p className="text-[10px] text-[#25D366] uppercase tracking-widest mt-0.5">
+              Panel de Control
+            </p>
           </div>
         </div>
 
         {/* WA Status */}
         <div className="px-3 pt-3 shrink-0">
           <Link href="/whatsapp">
-            <div className={cn("flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-medium cursor-pointer transition-colors", wa.connected ? "bg-[#25D366]/10 border-[#25D366]/30 text-[#25D366]" : "bg-muted/30 border-border text-muted-foreground hover:text-foreground")}>
-              <span className={cn("w-2 h-2 rounded-full shrink-0", wa.connected ? "bg-[#25D366] animate-pulse" : "bg-muted-foreground")} />
-              <span className="truncate">{wa.connected ? `Conectado${wa.phone ? " · +" + wa.phone : ""}` : "WhatsApp · Conectar"}</span>
+            <div
+              className={cn(
+                "flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-medium cursor-pointer transition-colors",
+                wa.connected
+                  ? "bg-[#25D366]/10 border-[#25D366]/30 text-[#25D366]"
+                  : "bg-muted/30 border-border text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <span
+                className={cn(
+                  "w-2 h-2 rounded-full shrink-0",
+                  wa.connected
+                    ? "bg-[#25D366] animate-pulse"
+                    : "bg-muted-foreground",
+                )}
+              />
+              <span className="truncate">
+                {wa.connected
+                  ? `Conectado${wa.phone ? " · +" + wa.phone : ""}`
+                  : "WhatsApp · Conectar"}
+              </span>
               <ChevronRight size={11} className="ml-auto shrink-0" />
             </div>
           </Link>
@@ -75,29 +141,70 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {/* Nav */}
         <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
           {NAV.map((item, i) => {
-            if ("divider" in item) return <div key={i} className="my-2 border-t border-border/40" />;
-            const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
-            return (
+            if ("divider" in item)
+              return <div key={i} className="my-2 border-t border-border/40" />;
+            if ("action" in item && item.action === "logout") {
+              return (
+                <div
+                  key="logout"
+                  onClick={() => {
+                    localStorage.clear();
+                    window.location.href = "/landing";
+                  }}
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:bg-secondary/60 hover:text-foreground cursor-pointer"
+                >
+                  <X size={16} />
+                  {item.label}
+                </div>
+              );
+            }
+            const isActive =
+              item.href &&
+              (location === item.href ||
+                (item.href !== "/" && location.startsWith(item.href)));
+            return item.href ? (
               <Link key={item.href} href={item.href}>
-                <div onClick={() => setOpen(false)} className={cn(
-                  "flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all cursor-pointer relative",
-                  "indent" in item && item.indent ? "ml-3 text-xs" : "",
-                  isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
-                )}>
-                  {isActive && <motion.div layoutId="nav-bar" className="absolute left-0 w-1 h-4 bg-primary rounded-r-full" transition={{ type: "spring", stiffness: 400, damping: 30 }} />}
+                <div
+                  onClick={() => setOpen(false)}
+                  className={cn(
+                    "flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all cursor-pointer relative",
+                    "indent" in item && item.indent ? "ml-3 text-xs" : "",
+                    isActive
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground",
+                  )}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="nav-bar"
+                      className="absolute left-0 w-1 h-4 bg-primary rounded-r-full"
+                      transition={{
+                        type: "spring",
+                        stiffness: 400,
+                        damping: 30,
+                      }}
+                    />
+                  )}
                   <item.icon size={"indent" in item && item.indent ? 14 : 16} />
                   {item.label}
-                  {item.href === "/whatsapp" && wa.connected && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#25D366]" />}
+                  {item.href === "/whatsapp" && wa.connected && (
+                    <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#25D366]" />
+                  )}
                 </div>
               </Link>
-            );
+            ) : null;
           })}
         </nav>
       </aside>
 
       <main className="flex-1 lg:ml-[256px] min-h-screen">
         <div className="p-6 md:p-8 max-w-7xl mx-auto">
-          <motion.div key={location} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
+          <motion.div
+            key={location}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+          >
             {children}
           </motion.div>
         </div>
