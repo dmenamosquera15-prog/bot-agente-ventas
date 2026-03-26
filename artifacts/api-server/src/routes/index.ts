@@ -14,6 +14,8 @@ import importProductsRouter from "./importProducts.js";
 import gitSyncRouter from "./gitSync.js";
 import githubCopilotRouter from "./githubCopilot.js";
 import adminChatRouter from "./adminChat.js";
+import { authRouter } from "./auth.js";
+import { migrateRouter } from "./migrate.js";
 
 const router: IRouter = Router();
 
@@ -32,5 +34,7 @@ router.use(aiProvidersRouter);
 router.use(importProductsRouter);
 router.use(gitSyncRouter);
 router.use(githubCopilotRouter);
+router.use("/auth", authRouter);
+router.use("/admin", migrateRouter);
 
 export default router;
