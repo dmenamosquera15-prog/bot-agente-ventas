@@ -4,16 +4,19 @@ import {
   Users,
   Search,
   Phone,
+  Smartphone,
   Mail,
   Calendar,
   Activity,
   Edit2,
   TrendingUp,
+  Loader2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Modal } from "@/components/Modal";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 export default function Clients() {
   const [filter, setFilter] = useState<string>("all");
@@ -25,16 +28,16 @@ export default function Clients() {
   const filteredClients =
     filter === "all" ? clients : clients.filter((c) => c.leadStatus === filter);
 
-  const getStatusColor = (status: string) => {
+  const getStatusStyle = (status: string) => {
     switch (status) {
       case "hot":
-        return "bg-red-500/10 text-red-500 border-red-500/20";
+        return "bg-rose-500/20 text-rose-400 border-rose-500/30 shadow-[0_0_15px_rgba(244,63,94,0.15)]";
       case "warm":
-        return "bg-orange-500/10 text-orange-500 border-orange-500/20";
+        return "bg-amber-500/20 text-amber-500 border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.15)]";
       case "cold":
-        return "bg-blue-500/10 text-blue-500 border-blue-500/20";
+        return "bg-slate-500/20 text-slate-400 border-slate-500/30";
       default:
-        return "bg-gray-500/10 text-gray-500 border-gray-500/20";
+        return "bg-white/5 text-slate-500 border-white/5";
     }
   };
 
@@ -55,27 +58,27 @@ export default function Clients() {
   };
 
   return (
-    <div className="space-y-8 animate-fade-in">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
         <div>
-          <h1 className="text-3xl font-display font-bold text-foreground">
-            Gestión de Clientes
+          <h1 className="text-5xl font-black text-white tracking-tight italic">
+            CRM <span className="text-emerald-500">Inteligente.</span>
           </h1>
-          <p className="text-muted-foreground mt-1">
-            CRM integrado con puntuación de leads por IA.
+          <p className="text-xl text-slate-400 mt-3 font-medium tracking-tight">
+            Gestión estratégica de leads potenciada por inteligencia artificial.
           </p>
         </div>
 
-        <div className="flex items-center gap-3 bg-secondary p-1.5 rounded-xl">
+        <div className="flex bg-white/5 rounded-2xl p-1.5 border border-white/5 backdrop-blur-xl">
           {["all", "hot", "warm", "cold"].map((status) => (
             <button
               key={status}
               onClick={() => setFilter(status)}
               className={cn(
-                "px-4 py-2 rounded-lg text-sm font-medium transition-all capitalize",
+                "px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
                 filter === status
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground hover:bg-card/50",
+                  ? "bg-emerald-600 text-white shadow-xl shadow-emerald-500/20"
+                  : "text-slate-500 hover:text-white"
               )}
             >
               {status === "all" ? "Todos" : status}
@@ -84,118 +87,110 @@ export default function Clients() {
         </div>
       </div>
 
-      <div className="bg-card border border-border/50 rounded-2xl shadow-xl shadow-black/5 overflow-hidden">
-        <div className="overflow-x-auto">
+      <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden relative group">
+        <div className="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+        <div className="overflow-x-auto scrollbar-hide">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-border/50 bg-secondary/30">
-                <th className="p-4 font-medium text-muted-foreground text-sm">
+              <tr className="border-b border-white/5 bg-white/5">
+                <th className="px-8 py-6 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">
                   Cliente
                 </th>
-                <th className="p-4 font-medium text-muted-foreground text-sm">
+                <th className="px-8 py-6 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">
                   Estado Lead
                 </th>
-                <th className="p-4 font-medium text-muted-foreground text-sm hidden md:table-cell">
-                  Probabilidad
+                <th className="px-8 py-6 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] hidden md:table-cell">
+                  Conversión
                 </th>
-                <th className="p-4 font-medium text-muted-foreground text-sm hidden lg:table-cell">
-                  Nivel Téc.
+                <th className="px-8 py-6 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] hidden lg:table-cell">
+                  Nivel Técnico
                 </th>
-                <th className="p-4 font-medium text-muted-foreground text-sm hidden sm:table-cell">
-                  Última Interacción
+                <th className="px-8 py-6 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] hidden sm:table-cell">
+                  Última vez
                 </th>
-                <th className="p-4 font-medium text-muted-foreground text-sm text-right">
-                  Acción
+                <th className="px-8 py-6 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] text-right">
+                  Acciones
                 </th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-white/5">
               {isLoading ? (
                 <tr>
-                  <td
-                    colSpan={6}
-                    className="p-8 text-center text-muted-foreground"
-                  >
-                    Cargando clientes...
+                  <td colSpan={6} className="p-20 text-center">
+                    <div className="flex flex-col items-center gap-4">
+                       <Loader2 className="text-emerald-500 animate-spin" size={40} />
+                       <p className="text-slate-500 font-black uppercase tracking-widest text-xs">Analizando Base de Datos...</p>
+                    </div>
                   </td>
                 </tr>
               ) : filteredClients.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={6}
-                    className="p-8 text-center text-muted-foreground"
-                  >
-                    No se encontraron clientes.
+                  <td colSpan={6} className="p-20 text-center">
+                    <p className="text-slate-500 font-black uppercase tracking-widest text-xs italic">No se encontraron registros activos</p>
                   </td>
                 </tr>
               ) : (
                 filteredClients.map((client) => (
                   <tr
                     key={client.id}
-                    className="border-b border-border/20 hover:bg-secondary/20 transition-colors group"
+                    className="hover:bg-white/5 transition-all group/row"
                   >
-                    <td className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-                          {client.name ? (
-                            client.name.charAt(0).toUpperCase()
-                          ) : (
-                            <Users size={18} />
-                          )}
+                    <td className="px-8 py-6">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-black text-lg italic shadow-xl">
+                          {client.name ? client.name.charAt(0).toUpperCase() : <Users size={20} />}
                         </div>
                         <div>
-                          <p className="font-semibold text-foreground text-sm">
-                            {client.name || "Sin Nombre"}
+                          <p className="font-black text-white tracking-tight">
+                            {client.name || "Sin Identificar"}
                           </p>
-                          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                            <Phone size={10} /> {client.phone}
+                          <p className="text-xs text-slate-500 font-bold tracking-widest flex items-center gap-1.5 mt-1">
+                            <Smartphone size={10} className="text-emerald-500" /> {client.phone}
                           </p>
                         </div>
                       </div>
                     </td>
-                    <td className="p-4">
+                    <td className="px-8 py-6">
                       <span
                         className={cn(
-                          "px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider border",
-                          getStatusColor(client.leadStatus),
+                          "px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all duration-500",
+                          getStatusStyle(client.leadStatus),
                         )}
                       >
                         {client.leadStatus}
                       </span>
                     </td>
-                    <td className="p-4 hidden md:table-cell">
-                      <div className="flex items-center gap-2">
-                        <div className="w-24 h-2 bg-secondary rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-primary to-emerald-400"
-                            style={{ width: `${client.purchaseProbability}%` }}
+                    <td className="px-8 py-6 hidden md:table-cell">
+                      <div className="flex items-center gap-4">
+                        <div className="flex-1 w-32 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${client.purchaseProbability}%` }}
+                            transition={{ duration: 1.5, ease: "easeOut" }}
+                            className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
                           />
                         </div>
-                        <span className="text-xs font-bold font-mono">
+                        <span className="text-[11px] font-black text-white italic">
                           {client.purchaseProbability}%
                         </span>
                       </div>
                     </td>
-                    <td className="p-4 hidden lg:table-cell">
-                      <span className="text-xs font-medium bg-secondary px-2 py-1 rounded capitalize text-foreground">
+                    <td className="px-8 py-6 hidden lg:table-cell">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 bg-white/5 px-3 py-1.5 rounded-xl border border-white/5">
                         {client.technicalLevel}
                       </span>
                     </td>
-                    <td className="p-4 hidden sm:table-cell">
-                      <span className="text-sm text-muted-foreground">
+                    <td className="px-8 py-6 hidden sm:table-cell">
+                      <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest italic">
                         {client.lastInteraction
-                          ? format(
-                              new Date(client.lastInteraction),
-                              "dd MMM yyyy",
-                              { locale: es },
-                            )
+                          ? format(new Date(client.lastInteraction), "dd MMM", { locale: es })
                           : "N/A"}
                       </span>
                     </td>
-                    <td className="p-4 text-right">
+                    <td className="px-8 py-6 text-right">
                       <button
                         onClick={() => setEditingClient(client)}
-                        className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                        className="w-10 h-10 rounded-xl bg-white/5 text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all flex items-center justify-center opacity-0 group-hover/row:opacity-100"
                       >
                         <Edit2 size={18} />
                       </button>
@@ -211,88 +206,67 @@ export default function Clients() {
       <Modal
         isOpen={!!editingClient}
         onClose={() => setEditingClient(null)}
-        title="Editar Cliente"
+        title="Perfil del Lead"
       >
         {editingClient && (
-          <form onSubmit={handleUpdate} className="space-y-4">
+          <form onSubmit={handleUpdate} className="space-y-6 p-2">
             <div>
-              <label className="block text-sm font-medium mb-1.5 text-muted-foreground">
-                Nombre
+              <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-3 text-slate-500 italic">
+                Nombre del Cliente
               </label>
               <input
                 type="text"
                 value={editingClient.name || ""}
-                onChange={(e) =>
-                  setEditingClient({ ...editingClient, name: e.target.value })
-                }
-                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                onChange={(e) => setEditingClient({ ...editingClient, name: e.target.value })}
+                className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-bold focus:outline-none focus:border-emerald-500 transition-all"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1.5 text-muted-foreground">
-                Teléfono (Solo lectura)
-              </label>
-              <input
-                type="text"
-                value={editingClient.phone}
-                disabled
-                className="w-full bg-secondary/50 border border-border/50 rounded-xl px-4 py-3 text-muted-foreground cursor-not-allowed"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
+            
+            <div className="grid grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium mb-1.5 text-muted-foreground">
-                  Estado Lead
+                <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-3 text-slate-500 italic">
+                  Calificación IA
                 </label>
                 <select
                   value={editingClient.leadStatus}
-                  onChange={(e) =>
-                    setEditingClient({
-                      ...editingClient,
-                      leadStatus: e.target.value,
-                    })
-                  }
-                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:ring-2 focus:ring-primary outline-none appearance-none"
+                  onChange={(e) => setEditingClient({ ...editingClient, leadStatus: e.target.value })}
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-bold focus:outline-none focus:border-emerald-500 appearance-none bg-no-repeat bg-[right_1.5rem_center]"
                 >
-                  <option value="hot">HOT (Caliente)</option>
-                  <option value="warm">WARM (Tibio)</option>
-                  <option value="cold">COLD (Frío)</option>
+                  <option value="hot">HOT (Venta Inminente)</option>
+                  <option value="warm">WARM (Interesado)</option>
+                  <option value="cold">COLD (No calificado)</option>
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1.5 text-muted-foreground">
-                  Nivel Técnico
+                <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-3 text-slate-500 italic">
+                  Perfil Técnico
                 </label>
                 <select
                   value={editingClient.technicalLevel}
-                  onChange={(e) =>
-                    setEditingClient({
-                      ...editingClient,
-                      technicalLevel: e.target.value,
-                    })
-                  }
-                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:ring-2 focus:ring-primary outline-none appearance-none"
+                  onChange={(e) => setEditingClient({ ...editingClient, technicalLevel: e.target.value })}
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-bold focus:outline-none focus:border-emerald-500 appearance-none"
                 >
-                  <option value="basic">Básico</option>
+                  <option value="basic">Principiante</option>
                   <option value="intermediate">Intermedio</option>
-                  <option value="advanced">Avanzado</option>
+                  <option value="advanced">Profesional</option>
                 </select>
               </div>
             </div>
-            <div className="pt-4 flex justify-end gap-3">
+
+            <div className="pt-8 flex justify-end gap-5">
               <button
                 type="button"
                 onClick={() => setEditingClient(null)}
-                className="px-6 py-2.5 rounded-xl text-foreground font-medium hover:bg-secondary transition-colors"
+                className="px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 hover:text-white transition-colors"
               >
-                Cancelar
+                Descartar
               </button>
               <button
                 type="submit"
                 disabled={updateMutation.isPending}
-                className="px-6 py-2.5 rounded-xl bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/25 hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-50"
+                className="px-10 py-4 rounded-2xl bg-emerald-600 text-white font-black uppercase tracking-[0.2em] text-[10px] shadow-2xl shadow-emerald-500/30 hover:bg-emerald-500 hover:-translate-y-1 transition-all disabled:opacity-50"
               >
-                {updateMutation.isPending ? "Guardando..." : "Guardar Cambios"}
+                {updateMutation.isPending ? "Sincronizando..." : "Aplicar Cambios"}
               </button>
             </div>
           </form>

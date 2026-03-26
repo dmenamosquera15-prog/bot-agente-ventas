@@ -22,6 +22,7 @@ import AdminCopilot from "@/pages/AdminCopilot";
 import Landing from "@/pages/Landing";
 import Auth from "@/pages/Auth";
 import Membership from "@/pages/Membership";
+import Billing from "@/pages/Billing";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -63,6 +64,7 @@ function Router() {
               <Route path="/admin-copilot" component={AdminCopilot} />
               <Route path="/config" component={Config} />
               <Route path="/membership" component={Membership} />
+              <Route path="/billing" component={Billing} />
               <Route component={NotFound} />
             </Switch>
           </Layout>

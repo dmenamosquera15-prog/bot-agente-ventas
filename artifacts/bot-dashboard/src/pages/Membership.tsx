@@ -1,368 +1,149 @@
-import { useEffect, useState } from "react";
-import { useLocation } from "wouter";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import {
-  CreditCard,
-  Check,
-  X,
-  Download,
-  Loader2,
-  AlertCircle,
-  Crown,
-  Sparkles,
-} from "lucide-react";
-
-interface Subscription {
-  id: number;
-  plan: string;
-  status: string;
-  priceCOP: number;
-  paymentMethod: string | null;
-  startsAt: string;
-  endsAt: string;
-}
-
-interface Tenant {
-  id: number;
-  name: string;
-  plan: string;
-  trialEndsAt: string | null;
-}
-
-interface Invoice {
-  id: number;
-  invoiceNumber: string;
-  plan: string;
-  priceCOP: number;
-  tax: number;
-  total: number;
-  status: string;
-  issuedAt: string;
-  paidAt: string | null;
-}
+import { Check, ShieldCheck, Zap, Rocket, Crown, CreditCard } from "lucide-react";
 
 const PLANS = [
-  {
-    id: "monthly",
-    name: "Plan Mensual",
-    price: 30000,
-    priceUSD: 7.5,
-    period: "mes",
-    features: [
-      "✅ Bot de WhatsApp con IA",
-      "✅ Respuestas automáticas 24/7",
-      "✅ Catálogo de productos",
-      "✅ 1 número de WhatsApp",
-      "✅ Panel de control completo",
-      "✅ IA con memoria majestuosa",
-      "✅ Links de pago dinámicos",
-      "✅ Mercado Pago y PayPal",
-      "✅ Facturas automáticas",
-    ],
+  { 
+    id: "monthly", 
+    name: "Plan Mensual", 
+    price: "30.000", 
+    period: "COP / mes", 
+    color: "emerald",
+    icon: Rocket,
+    desc: "Perfecto para negocios que están escalando rápidamente."
   },
-  {
-    id: "annual",
-    name: "Plan Anual",
-    price: 360000,
-    priceUSD: 90,
-    period: "año",
-    badge: "MEJOR VALOR",
-    badgeColor: "bg-amber-500",
-    features: [
-      "✅ Todo del plan mensual",
-      "✅ 2 meses incluidos",
-      "✅ Soporte prioritario",
-      "✅ Actualizaciones premium",
-      "✅ Sin interrupciones",
-      "✅ Precio bloqueado",
-    ],
+  { 
+    id: "annual", 
+    name: "Plan Anual", 
+    price: "360.000", 
+    period: "COP / año", 
+    color: "amber",
+    icon: Crown,
+    desc: "Ahorra y asegura tu bot por todo el año con facturación premium."
   },
 ];
 
-const formatCOP = (v: number) =>
-  new Intl.NumberFormat("es-CO", {
-    style: "currency",
-    currency: "COP",
-    maximumFractionDigits: 0,
-  }).format(v);
-const formatDate = (d: string | null) =>
-  d
-    ? new Date(d).toLocaleDateString("es-CO", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
-    : "-";
+const FEATURES = [
+  "IA con Memoria Contextual Avanzada",
+  "Links de Pago MercadoPago/PayPal Ilimitados",
+  "Facturación DIAN Automática (PDF)",
+  "Soporte Prioritario VIP 24/7",
+  "Dashboard de Métricas Pro",
+  "Importación Masiva de Productos",
+];
 
 export default function Membership() {
-  const [, navigate] = useLocation();
-  const [loading, setLoading] = useState(true);
-  const [subscribing, setSubscribing] = useState<string | null>(null);
-  const [tenant, setTenant] = useState<Tenant | null>(null);
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const token = localStorage.getItem("token");
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  const handleSubscribe = async (planId: string) => {
+    setLoading(true);
     try {
-      const [meRes, invoicesRes] = await Promise.all([
-        fetch("/api/auth/me", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch("/api/auth/invoices", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      ]);
-
-      if (!meRes.ok) throw new Error("Unauthorized");
-      const meData = await meRes.json();
-      setTenant(meData.tenant);
-      setSubscription(meData.subscription);
-
-      if (invoicesRes.ok) {
-        const invData = await invoicesRes.json();
-        setInvoices(invData);
+      const res = await fetch("/api/auth/subscribe", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify({ plan: planId, paymentMethod: "mercadopago" }),
+      });
+      const data = await res.json();
+      if (data.paymentLink) {
+        window.location.href = data.paymentLink;
       }
     } catch (err) {
-      setError("Error cargando datos");
+      alert("Error al generar el link de pago");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubscribe = async (planId: string) => {
-    setSubscribing(planId);
-    setError(null);
-
-    try {
-      const res = await fetch("/api/auth/subscribe", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          plan: planId,
-          paymentMethod: "mercadopago",
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.error || "Error generando pago");
-
-      if (data.paymentLink) {
-        window.location.href = data.paymentLink;
-      }
-    } catch (err: any) {
-      setError(err.message);
-      setSubscribing(null);
-    }
-  };
-
-  const getPlanStatus = () => {
-    if (!subscription)
-      return { label: "Sin plan", color: "text-red-500", bg: "bg-red-500/10" };
-    if (subscription.status === "active") {
-      return {
-        label: `Plan ${subscription.plan}`,
-        color: "text-green-500",
-        bg: "bg-green-500/10",
-      };
-    }
-    if (subscription.status === "pending") {
-      return {
-        label: "Pago pendiente",
-        color: "text-yellow-500",
-        bg: "bg-yellow-500/10",
-      };
-    }
-    return {
-      label: `Plan ${subscription.plan}`,
-      color: "text-muted-foreground",
-      bg: "bg-muted",
-    };
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  const status = getPlanStatus();
-
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-3">
-            <Crown className="w-8 h-8 text-amber-500" />
-            Membresía
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Gestiona tu plan y facturación
-          </p>
-        </div>
-        <div
-          className={`px-4 py-2 rounded-full text-sm font-medium ${status.bg} ${status.color}`}
-        >
-          {status.label}
-        </div>
+    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+      <div>
+        <h1 className="text-5xl font-black text-white tracking-tight italic">
+          Power <span className="text-emerald-500">Membresía.</span>
+        </h1>
+        <p className="text-xl text-slate-400 mt-3 font-medium tracking-tight">Escala tu negocio con el asistente de ventas más potente del mercado.</p>
       </div>
 
-      {/* Current Plan */}
-      {subscription && subscription.status === "active" && (
-        <div className="bg-gradient-to-r from-indigo-600/10 to-purple-600/10 border border-indigo-500/20 rounded-2xl p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-2 text-indigo-400 text-sm font-medium mb-1">
-                <Sparkles size={16} />
-                Plan activo
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+        {PLANS.map((plan, idx) => (
+          <motion.div 
+            key={plan.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.1 }}
+            className="group p-10 rounded-[3rem] bg-white/[0.03] backdrop-blur-3xl border border-white/10 hover:border-emerald-500/50 transition-all duration-500 flex flex-col shadow-2xl relative overflow-hidden"
+          >
+            <div className={`absolute top-0 right-0 w-64 h-64 ${plan.color === 'emerald' ? 'bg-emerald-500' : 'bg-amber-500'}/10 rounded-full blur-[100px] -mr-32 -mt-32 opacity-0 group-hover:opacity-100 transition-opacity`} />
+            
+            <div className="flex items-center gap-4 mb-8">
+              <div className={`w-14 h-14 rounded-2xl ${plan.color === 'emerald' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-500'} flex items-center justify-center`}>
+                <plan.icon size={28} />
               </div>
-              <h3 className="text-2xl font-bold capitalize">
-                {subscription.plan}
-              </h3>
-              <p className="text-muted-foreground text-sm mt-1">
-                Vence el {formatDate(subscription.endsAt)}
-              </p>
-            </div>
-            <div className="text-right">
-              <div className="text-3xl font-bold">
-                {formatCOP(subscription.priceCOP)}
-              </div>
-              <div className="text-muted-foreground text-sm">
-                /{subscription.plan === "annual" ? "año" : "mes"}
+              <div>
+                <h3 className="text-2xl font-black text-white italic tracking-tight">{plan.name}</h3>
+                <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em]">Acceso Full</p>
               </div>
             </div>
-          </div>
-        </div>
-      )}
 
-      {/* Error */}
-      {error && (
-        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex items-center gap-3 text-red-400">
-          <AlertCircle size={20} />
-          {error}
-        </div>
-      )}
+            <div className="mb-10">
+              <span className="text-5xl font-black text-white italic tracking-tighter">$ {plan.price}</span>
+              <span className="text-slate-500 font-bold ml-3 uppercase text-xs tracking-widest">{plan.period}</span>
+              <p className="text-slate-400 mt-4 text-sm font-medium leading-relaxed italic">{plan.desc}</p>
+            </div>
 
-      {/* Plans */}
-      <div className="grid md:grid-cols-2 gap-6">
-        {PLANS.map((plan) => {
-          const isCurrent =
-            subscription?.plan === plan.id && subscription.status === "active";
-          return (
-            <motion.div
-              key={plan.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`relative bg-card border rounded-2xl p-6 ${isCurrent ? "border-indigo-500/50 ring-2 ring-indigo-500/20" : "border-border"}`}
+            <div className="space-y-4 mb-12 flex-1 relative z-10">
+              {FEATURES.map((feat, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className={`w-5 h-5 rounded-full ${plan.color === 'emerald' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'} flex items-center justify-center shrink-0`}>
+                    <Check size={12} strokeWidth={4} />
+                  </div>
+                  <span className="text-sm text-slate-400 font-bold group-hover:text-slate-300 transition-colors">{feat}</span>
+                </div>
+              ))}
+            </div>
+
+            <button 
+              disabled={loading}
+              onClick={() => handleSubscribe(plan.id)}
+              className={`w-full py-5 rounded-3xl font-black uppercase tracking-widest transition-all text-sm relative z-10 overflow-hidden ${
+                plan.color === "emerald" 
+                ? "bg-emerald-600 text-white shadow-[0_15px_30px_rgba(16,185,129,0.3)] hover:bg-emerald-500 active:scale-95" 
+                : "bg-amber-600 text-white shadow-[0_15px_30px_rgba(245,158,11,0.3)] hover:bg-amber-500 active:scale-95"
+              }`}
             >
-              {plan.badge && (
-                <div
-                  className={`absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-bold text-white ${plan.badgeColor}`}
-                >
-                  {plan.badge}
-                </div>
-              )}
-              <div className="text-center mb-6">
-                <h3 className="font-bold text-xl mb-2">{plan.name}</h3>
-                <div className="text-4xl font-black">
-                  {formatCOP(plan.price)}
-                </div>
-                <div className="text-muted-foreground text-sm">
-                  COP / {plan.period}
-                </div>
+              <div className="flex items-center justify-center gap-3">
+                {loading ? <Zap className="animate-spin" size={18} /> : <CreditCard size={18} />}
+                {loading ? "Generando..." : "Activar Ahora"}
               </div>
-              <ul className="space-y-3 mb-6">
-                {plan.features.map((f) => (
-                  <li
-                    key={f}
-                    className="text-sm text-muted-foreground flex items-start gap-2"
-                  >
-                    <Check className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
-                    {f.replace("✅ ", "")}
-                  </li>
-                ))}
-              </ul>
-              <button
-                onClick={() => handleSubscribe(plan.id)}
-                disabled={isCurrent || subscribing === plan.id}
-                className={`w-full py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 ${
-                  isCurrent
-                    ? "bg-muted text-muted-foreground cursor-default"
-                    : "bg-indigo-600 hover:bg-indigo-500 text-white"
-                }`}
-              >
-                {subscribing === plan.id ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : isCurrent ? (
-                  "Plan Actual"
-                ) : (
-                  <>
-                    <CreditCard size={18} />
-                    Suscribirme
-                  </>
-                )}
-              </button>
-            </motion.div>
-          );
-        })}
+            </button>
+          </motion.div>
+        ))}
       </div>
 
-      {/* Invoices */}
-      <div className="bg-card border border-border rounded-2xl p-6">
-        <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-          <Download size={20} />
-          Facturas
-        </h3>
-        {invoices.length === 0 ? (
-          <p className="text-muted-foreground text-center py-8">
-            No hay facturas aún
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {invoices.map((inv) => (
-              <div
-                key={inv.id}
-                className="flex items-center justify-between p-4 bg-muted/30 rounded-xl"
-              >
-                <div>
-                  <div className="font-medium">{inv.invoiceNumber}</div>
-                  <div className="text-sm text-muted-foreground">
-                    {inv.plan} · {formatDate(inv.issuedAt)}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="font-bold">{formatCOP(inv.total)}</div>
-                  <div
-                    className={`text-xs ${inv.status === "paid" ? "text-green-500" : "text-yellow-500"}`}
-                  >
-                    {inv.status === "paid" ? "✅ Pagada" : "⏳ Pendiente"}
-                  </div>
-                </div>
-                <a
-                  href={`/api/auth/invoices/${inv.id}/html`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 hover:bg-muted rounded-lg transition-colors"
-                >
-                  <Download size={18} />
-                </a>
-              </div>
-            ))}
+      <div className="p-10 rounded-[2.5rem] bg-white/[0.02] border border-white/5 relative overflow-hidden group">
+        <div className="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="flex flex-col md:flex-row items-center gap-10 relative z-10">
+          <div className="w-20 h-20 rounded-full bg-slate-900 border border-emerald-500/30 flex items-center justify-center">
+            <ShieldCheck className="text-emerald-500" size={36} />
           </div>
-        )}
+          <div className="flex-1 text-center md:text-left">
+            <h4 className="text-xl font-black text-white italic mb-2 tracking-tight flex items-center gap-2 justify-center md:justify-start">
+              Garantía de Satisfacción Total
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+              <div className="space-y-2">
+                <p className="text-xs text-white font-black uppercase tracking-widest">¿Puedo cancelar en cualquier momento?</p>
+                <p className="text-xs text-slate-500 font-bold leading-relaxed">Sí, nuestra plataforma no tiene cláusulas de permanencia. Puedes cancelar tu suscripción mensual o anual cuando desees desde tu panel de configuración.</p>
+              </div>
+              <div className="space-y-2">
+                <p className="text-xs text-white font-black uppercase tracking-widest">¿Qué métodos de pago soportan?</p>
+                <p className="text-xs text-slate-500 font-bold leading-relaxed">Aceptamos todas las tarjetas de crédito, PSE y Efecty vía Mercado Pago, además de pagos internacionales a través de PayPal para garantizar seguridad total.</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
