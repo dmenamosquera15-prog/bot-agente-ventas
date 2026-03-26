@@ -33,14 +33,18 @@ app.use("/api", router);
 
 // --- SERVIDOR TODO-EN-UNO (API + DASHBOARD) ---
 // Apuntamos a la carpeta donde Vite dejará los archivos estáticos compilados
-const dashboardPath = path.resolve(__dirname, "../../bot-dashboard/dist");
+const dashboardPath = path.resolve(
+  __dirname,
+  "../../bot-dashboard/dist/public",
+);
 app.use(express.static(dashboardPath));
 
-// Cualquier otra ruta que no sea de la API (/api/*) caerá aquí y devolverá la app de React
-app.get("*", (req, res) => {
+app.use((req, res) => {
   res.sendFile(path.join(dashboardPath, "index.html"));
 });
 // Auto-connect WhatsApp on startup
-connect().catch((err) => logger.warn({ err }, "WhatsApp initial connect failed"));
+connect().catch((err) =>
+  logger.warn({ err }, "WhatsApp initial connect failed"),
+);
 
 export default app;
