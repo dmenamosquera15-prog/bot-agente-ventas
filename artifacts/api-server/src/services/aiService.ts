@@ -37,7 +37,23 @@ const INTENTS = [
 ];
 
 async function getClient(): Promise<{ client: OpenAI; model: string }> {
-  // 1. PRIORITIZE ENV GITHUB_TOKEN
+  // 1. PRIORITIZE DB PROVIDERS (SET VIA DASHBOARD)
+  try {
+    const provider = await db.query.aiProvidersTable.findFirst({
+      where: eq(aiProvidersTable.isDefault, true),
+    });
+    if (provider && provider.apiKey && provider.apiKey.trim() !== "") {
+      const client = new OpenAI({
+        apiKey: provider.apiKey,
+        baseURL: provider.baseUrl || undefined,
+      });
+      return { client, model: provider.model || "gpt-4o" };
+    }
+  } catch (err: any) {
+    console.error("DEBUG: DB provider fetch failed", err?.message);
+  }
+
+  // 2. FALLBACK TO ENV GITHUB_TOKEN
   if (process.env.GITHUB_TOKEN) {
     return {
       client: new OpenAI({
@@ -46,22 +62,6 @@ async function getClient(): Promise<{ client: OpenAI; model: string }> {
       }),
       model: process.env.GITHUB_MODEL || "gpt-4o",
     };
-  }
-
-  // 2. Fallback to DB providers
-  try {
-    const provider = await db.query.aiProvidersTable.findFirst({
-      where: eq(aiProvidersTable.isDefault, true),
-    });
-    if (provider && provider.apiKey) {
-      const client = new OpenAI({
-        apiKey: provider.apiKey,
-        baseURL: provider.baseUrl || undefined,
-      });
-      return { client, model: provider.model };
-    }
-  } catch (err: any) {
-    console.error("DEBUG: DB provider fetch failed", err?.message);
   }
 
   // Final fallback
@@ -293,5 +293,43 @@ export async function generateResponse(
   } catch (err: any) {
     console.error("DEBUG: generateResponse FAILED!", err?.message, err?.response?.data || "");
     return "Estoy teniendo dificultades técnicas. Por favor intenta en un momento.";
+  }
+}
+export async function extractOrderData(
+  history: Array<{ role: "user" | "assistant"; content: string }>,
+): Promise<any | null> {
+  try {
+    const { client } = await getClient();
+    const completion = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: `Tu tarea es extraer los datos de envío y el producto solicitado de la conversación para crear un pedido en WooCommerce.
+Si faltan datos críticos (nombre, dirección, ciudad o producto), devuelve null.
+IMPORTANTE: Identifica el producto EXACTO y la cantidad. Si el cliente no especificó cantidad, asume 1.
+Responde SOLO JSON o null: 
+{
+  "first_name": "...", 
+  "last_name": "...", 
+  "address_1": "...", 
+  "city": "...", 
+  "phone": "...",
+  "product_name": "...",
+  "quantity": 1
+}`,
+        },
+        ...history.slice(-10).map((h) => ({ role: h.role, content: h.content })),
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0,
+    });
+
+    const data = JSON.parse(completion.choices[0]?.message?.content || "null");
+    if (!data || !data.product_name || !data.address_1 || !data.city) return null;
+    return data;
+  } catch (err) {
+    console.error("DEBUG: extractOrderData FAILED!", err);
+    return null;
   }
 }

@@ -123,6 +123,7 @@ router.post("/products/import/woocommerce", async (req, res) => {
       brand: String(((p.attributes as {name:string,options:string[]}[])?.find(a => a.name.toLowerCase().includes("marca") || a.name.toLowerCase().includes("brand"))?.options?.[0]) || "") || undefined,
       stock: parseInt(String(p.stock_quantity || "0"), 10) || 0,
       imageUrl: ((p.images as {src:string}[])?.[0]?.src) || undefined,
+      wooCommerceId: Number(p.id),
       isActive: true,
     })).filter(p => p.name && !isNaN(p.price));
 

@@ -3,7 +3,10 @@ import {
   generateResponse,
   orchestrate,
   searchRelevantProducts,
+  extractOrderData,
 } from "../services/aiService.js";
+import { PaymentService } from "../services/paymentService.js";
+import { WooCommerceService } from "../services/woocommerceService.js";
 import { db } from "@workspace/db";
 import {
   clientsTable,
@@ -147,7 +150,7 @@ async function getProductContext(entities: Record<string, string>) {
     return `CATÁLOGO DISPONIBLE:\n${products
       .map(
         (p) =>
-          `• ${p.name} | Precio: $${p.price} USD | Categoría: ${p.category}${p.brand ? " | Marca: " + p.brand : ""} | Stock: ${p.stock} unidades${p.description ? "\n  Detalles: " + p.description : ""}`,
+          `• ${p.name} | Precio: $${p.price} COP 💰 | Categoría: ${p.category}${p.brand ? " | Marca: " + p.brand : ""} | Stock: ${p.stock} unidades${p.description ? "\n  Detalles: " + p.description : ""}`,
       )
       .join("\n")}`;
   } catch (err) {
@@ -251,7 +254,7 @@ export async function handleMessage(
         productContext = `PRODUCTOS RELEVADOS PARA ESTA CONSULTA:\n${products
           .map(
             (p) =>
-              `• ${p.name} | Precio: $${p.price} USD | Detalles: ${p.description || "N/A"}`,
+              `• ${p.name} | Precio: $${p.price} COP 💰 | Stock: ${p.stock} | Detalles: ${p.description || "N/A"}`,
           )
           .join("\n")}`;
       }
@@ -267,6 +270,25 @@ export async function handleMessage(
   if (!productContext) {
     searchMethod = "sql_fallback";
     productContext = await getProductContext(intentData.entities);
+  }
+
+  // ULTIMO RESCATE: Si después de todo NO hay productos, busca los más populares
+  if (!productContext) {
+    // Buscar cualquier producto activo como último recurso
+    const fallbackProducts = await db
+      .select()
+      .from(productsTable)
+      .where(eq(productsTable.isActive, true))
+      .limit(3);
+
+    if (fallbackProducts.length > 0) {
+      searchMethod = "fallback_popular";
+      productContext = `PRODUCTOS DISPONIBLES:\n${fallbackProducts
+        .map(
+          (p) => `• ${p.name} | Precio: $${p.price} COP 💰 | Stock: ${p.stock}`,
+        )
+        .join("\n")}`;
+    }
   }
 
   // Log search result for monitoring
@@ -302,58 +324,149 @@ Habla de forma natural, cálida y profesional. NUNCA robótico.`;
 
 NEGOCIO: ${botConfig.businessName} | TIPO: ${botConfig.businessType}
 HORARIO: ${botConfig.workingHours}
+MÉTODOS DE PAGO: ${botConfig.paymentMethods}
+MONEDA: PESOS COLOMBIANOS (COP) 💰
 ${clientName || client.name ? `CLIENTE: ${clientName || client.name}` : ""}
 
-═══════════════════════════════════════════════════════════════════════════════
-⚠️  REGLAS ANTI-ALUCINACIÓN - LÉYELAS AHORA:
-═══════════════════════════════════════════════════════════════════════════════
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💳 INFORMACIÓN DE PAGO (SOLO USE ESTOS DATOS):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${botConfig.bankName ? `🏦 Banco: ${botConfig.bankName}` : ""}
+${botConfig.bankAccount ? `📋 Cuenta: ${botConfig.bankAccount} (${botConfig.bankAccountType || ""})` : ""}
+${botConfig.bankOwner ? `👤 Titular: ${botConfig.bankOwner}` : ""}
+${botConfig.nequiNumber ? `📱 Nequi: ${botConfig.nequiNumber}` : ""}
+${botConfig.daviplataNumber ? `📱 Daviplata: ${botConfig.daviplataNumber}` : ""}
+${botConfig.paypalEmail ? `💰 PayPal: ${botConfig.paypalEmail}` : ""}
+${botConfig.mercadoPagoLink ? `💳 MercadoPago: ${botConfig.mercadoPagoLink}` : ""}
 
-1. INFORMACIÓN PERMITIDA (SOLO ESTO):
-   ✓ Datos en el contexto de productos abajo
-   ✓ Datos en el contexto de conocimiento abajo
-   ✓ Lo que el usuario pregunta explícitamente
-   ✗ TODO LO DEMÁS = ALUCINACIÓN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️ REGLAS CRÍTICAS - LÉELAS CON ATENCIÓN:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-2. PROHIBICIONES ABSOLUTAS:
-   ✗ NO inventes URLs de imágenes (ej: https://...)
-   ✗ NO inventes precios diferentes a los de abajo
-   ✗ NO inventes características no mencionadas
-   ✗ NO sugieras productos que no existen
-   ✗ NO prometas fechas de entrega sin confirmar
-   ✗ NO hagas descuentos no autorizados
+🎯 PRIORIDAD #1 - MEMORIA Y CONTEXTO:
+• ULTIMO PRODUCTO MENCIONADO: Siempre recuerda el último producto del que hablaste
+• Cuando el cliente dice "ese", "ese mismo", "el mismo", "ese producto" → Se refiere AL MISMO PRODUCTO que mencionamos antes
+• Si acabas de decir "El Mega Pack 81 tiene $60.000 COP" y el cliente pregunta "Y ese tiene garantía?"
+  → DEBES responder sobre el Mega Pack 81
+  → NO busques otros productos
 
-3. CASOS ESPECÍFICOS:
-   
-   Si preguntan por URL/foto:
-   → RESPONDE: "La información de imágenes está disponible en nuestra web"
-   → NUNCA: "https://..." inventada
-   
-   Si preguntan por algo que no tienes:
-   → RESPONDE: "No tengo esa información. Lo que sí puedo ofrecerte es: [productos REALES]"
-   → NUNCA: Inventes características o productos
-   
-   Si el precio en BD es $99.99:
-   → RESPONDE: "El precio es $99.99"
-   → NUNCA: "Alrededor de $100" o "$99-100"
-   
-   Si stock es 5:
-   → RESPONDE: "Tenemos 5 unidades disponibles"
-   → NUNCA: "Pocas unidades" (demasiado vago)
+🎯 PRIORIDAD #2 - ETAPA DE DESCUBRIMIENTO (cuando el cliente no sabe exactamente qué quiere):
+• Si el cliente dice "quiero un portátil", "necesito algo para...", "qué me recomiendas?", "tienen...?"
+  → NO muestres productos inmediatamente
+  → Haz MAXIMO 1-2 PREGUNTAS para entender necesidades básicas
+  → Ejemplos:
+    - Si dice "para trabajo" → pregunta presupuesto
+    - Si dice "para estudiar" → pregunta presupuesto
+  → LUEGO muestra productos del catálogo
+• El cliente espera VER productos, no muchas preguntas
+• 1-2 preguntas = servicio profesional
+• 3+ preguntas = experiencia frustrante
 
-4. ANTES DE RESPONDER:
-   Pregúntate SIEMPRE:
-   - ¿Este dato está en el contexto de abajo?
-   - ¿Estoy inventando algo?
-   - ¿Puedo verificar esto?
-   
-   Si NO a cualquiera → NO LO DIGAS
+🎯 PRIORIDAD #3 - BÚSQUEDA DE PRODUCTOS:
+• SIEMPRE busca productos en el catálogo ANTES de decir "no tenemos"
+• Si el cliente pregunta por "portátil", "laptop", "computadora" → BUSCA productos con "Portatil" o "portátil"
+• Si el cliente da un presupuesto (ej: "2 millones") → BUSCA productos menores a ese precio
+• NUNCA digas "no tenemos productos" si ya mostraste productos antes en la conversación
+• ULTIMO RECURSO: Si después de buscar NO hay productos, entonces dice "no tenemos"
+• USA EMOJIS para dar formato, NO asteriscos (**)
+• Ejemplo CORRECTO: "💰 Precio: $50.000 COP"
+• Ejemplo INCORRECTO: "**Precio:** $50.000 COP"
+• Usa emojis como: 💰 para precios, 🛒 para stock, ✅ para confirmaciones, ❌ para errores
 
-═══════════════════════════════════════════════════════════════════════════════
-CONTEXTO DE INFORMACIÓN:
-═══════════════════════════════════════════════════════════════════════════════
+🎯 PRIORIDAD #4 - PRECISIÓN ABSOLUTA:
+• Los precios son en PESOS COLOMBIANOS (COP) 💰
+• SIEMPRE muestra el símbolo $ antes del precio (ej: $150.000 COP)
+• NUNCA digas precios en dólares
+• NUNCA inventes información
+• NUNCA inventes números de teléfono o contactos
+• NUNCA digas que tienes dirección física si no la tienes
+• Si no tienes la información, dice "No tengo esa información disponible"
 
-CATÁLOGO DISPONIBLE:
-${productContext || "❌ SIN PRODUCTOS DISPONIBLES"}
+🚫 PROHIBICIONES ABSOLUTAS:
+• NO inventes URLs de imágenes
+• NO inventes precios diferentes a los del catálogo
+• NO inventes números de teléfono (el único contacto es el WhatsApp por donde escribes)
+• NO inventes direcciones físicas
+• NO inventes características de productos
+• NO sugieras productos que no existen
+• NO prometas fechas de entrega
+• NO hagas descuentos no autorizados
+• NO inventes métodos de pago - usa solo: ${botConfig.paymentMethods}
+
+📋 REGLAS ESPECÍFICAS - FORMATO DE PRESENTACIÓN DE PRODUCTOS:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💳 PRESENTACIÓN DE PRODUCTO CON VALOR AGREGADO:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📱 FORMATO GENERAL:
+━━━━━━━━━━━━━━
+• NOMBRE DEL PRODUCTO (en mayúscula)
+• Precio destacado
+• Especificaciones clave (máx 4 puntos)
+• Stock disponible
+• Valor agregado único según categoría
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💻 PORTÁTILES (Laptops):
+━━━━━━━━━━━━━━
+Incluye en la respuesta:
+• Procesador y RAM
+• Almacenamiento SSD
+• Tamaño de pantalla
+• Valor agregado: "✅ GARANTÍA ORIGINAL | 🚚 ENVÍO gratis a toda Colombia | 💻 Seguro todo riesgo incluido"
+
+📱 CELULARES Y ACCESORIOS:
+━━━━━━━━━━━━━━
+Incluye en la respuesta:
+• Modelo compatible
+• Característica principal
+• Valor agregado: "✅ 100% original | 🔄 Cambio inmediato si no funciona | 🚚 Envío gratis"
+
+🧹 PRODUCTOS DE LIMPIEZA/EQUIPOS:
+━━━━━━━━━━━━━━
+Incluye en la respuesta:
+• Contenido/Tamaño
+• Rendimiento
+• Valor agregado: "✅ Calidad profesional | 📦 Envío inmediato"
+
+🐕 PRODUCTOS PARA MASCOTAS:
+━━━━━━━━━━━━━━
+Incluye en la respuesta:
+• Tamaño/Edad recomendada
+• Material seguro
+• Valor agregado: "❤️ Cuidado seguro | 🚚 Envío a todo Colombia"
+
+📎 SUMINISTROS DE OFICINA:
+━━━━━━━━━━━━━━
+Incluye en la respuesta:
+• Cantidad/Unidades
+• Uso recomendado
+• Valor agregado: "✅ Mejor precio del mercado | 📦 Envío inmediato"
+
+💻 MEGA PACKS (CURSOS DIGITALES):
+━━━━━━━━━━━━━━
+Incluye en la respuesta:
+• Cantidad de horas/contenido
+• Lo que incluye (recursos, lecciones)
+• Valor agregado: "✅ Acceso inmediato | 🎓 Certificado incluido | 🔐 Garantía de por vida"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 LLAMADAS A LA ACCIÓN (siempre incluir al final):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• ¿Te interesa? → "✅ Lo quiero" = Datos de pago
+• "¿Otra opción?" = Mostrar siguiente producto
+• "¿Más información?" = Detalles técnicos
+• "No me sirve" = Ofrecer alternativas
+
+NUNCA termin sin dar una opción al cliente para avanzar en la compra.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📦 CATÁLOGO DISPONIBLE:
+📦 ${productContext || "❌ SIN PRODUCTOS DISPONIBLES"}
+
+💳 MÉTODOS DE PAGO:
+💳 ${botConfig.paymentMethods}
 
 INFORMACIÓN ADICIONAL:
 ${knowledgeContext || "❌ SIN INFORMACIÓN ADICIONAL"}
@@ -381,6 +494,100 @@ INSTRUCCIONES FINALES:
       message,
       history,
     );
+
+    // --- INTEGRACIÓN DE PAGOS DINÁMICOS (MEMORIA MAJESTUOSA) ---
+    if (intentData.intent === "metodo_pago" || intentData.intent === "compra" || agentKey === "cierre") {
+      // Intentar identificar el producto del contexto actual o del HISTORIAL RECIENTE
+      const productRegex = /• ([^|]+) \| Precio: \$([0-9.]+)/;
+      
+      // 1. Buscar en el contexto actual
+      const currentProducts = productContext.match(new RegExp(productRegex, "g"));
+      let productMatch = null;
+
+      if (currentProducts && currentProducts.length > 0) {
+        productMatch = productRegex.exec(currentProducts[0]);
+      } 
+      
+      // 2. Si no hay en contexto, BUSCAR EN HISTORIAL (Memoria Majestuosa)
+      if (!productMatch && history.length > 0) {
+        // Recorrer el historial de atrás hacia adelante (solo mensajes del asistente)
+        for (let i = history.length - 1; i >= 0; i--) {
+          if (history[i].role === "assistant") {
+            const histMatches = history[i].content.match(new RegExp(productRegex, "g"));
+            if (histMatches && histMatches.length > 0) {
+              productMatch = productRegex.exec(histMatches[0]);
+              if (productMatch) {
+                logger.info({ productName: productMatch[1] }, "Producto recuperado de la memoria majestuosa");
+                break;
+              }
+            }
+          }
+        }
+      }
+
+      if (productMatch) {
+        const productName = productMatch[1].trim();
+        const priceCOP = parseFloat(productMatch[2].replace(/\./g, ""));
+
+        const links = [];
+        
+        // Generar link de Mercado Pago (Colombia)
+        if (botConfig.paymentMethods?.toLowerCase().includes("mercado") || message.toLowerCase().includes("mercado")) {
+          const mpLink = await PaymentService.createMercadoPagoLink(productName, priceCOP);
+          if (mpLink) links.push(`💳 *Pago con Mercado Pago (COP):*\n${mpLink}`);
+        }
+
+        // Generar link de PayPal (Internacional)
+        if (botConfig.paymentMethods?.toLowerCase().includes("paypal") || message.toLowerCase().includes("paypal")) {
+          // Conversión aproximada a USD (TasaRef: 4000)
+          const priceUSD = Math.round(priceCOP / 4000); 
+          const ppLink = await PaymentService.createPayPalLink(productName, priceUSD || 1);
+          if (ppLink) links.push(`💰 *Pago con PayPal (USD):*\n${ppLink}`);
+        }
+
+        if (links.length > 0) {
+          response += `\n\n━━━━━━━━━━━━━━━━━━━━━\n🚀 *LINKS DE PAGO RÁPIDO:*\n${links.join("\n\n")}\n━━━━━━━━━━━━━━━━━━━━━`;
+        }
+      }
+    }
+
+    // --- AUTOMATIZACIÓN DE WOOCOMMERCE ---
+    if (agentKey === "confirmacion" || intentData.intent === "pedido") {
+      const orderData = await extractOrderData(history);
+      if (orderData && botConfig.wooCommerceUrl && botConfig.wooCommerceConsumerKey) {
+        // Buscar el ID de producto en nuestra DB si es posible
+        const dbProduct = await db.query.productsTable.findFirst({
+          where: ilike(productsTable.name, `%${orderData.product_name}%`)
+        });
+
+        const wcOrder = await WooCommerceService.createOrder(
+          {
+            url: botConfig.wooCommerceUrl,
+            ck: botConfig.wooCommerceConsumerKey,
+            cs: botConfig.wooCommerceConsumerSecret || ""
+          },
+          {
+            first_name: orderData.first_name,
+            last_name: orderData.last_name,
+            address_1: orderData.address_1,
+            city: orderData.city,
+            phone: orderData.phone || phone,
+            line_items: [
+              {
+                product_id: (dbProduct as any)?.wooCommerceId || undefined,
+                name: orderData.product_name,
+                quantity: orderData.quantity || 1
+              }
+            ]
+          }
+        );
+
+        if (wcOrder && (wcOrder as any).id) {
+          response += `\n\n✅ *PEDIDO PROCESADO:* Tu pedido #${(wcOrder as any).id} ha sido registrado en nuestro sistema de despachos.`;
+          logger.info({ phone, wcOrderId: (wcOrder as any).id }, "WooCommerce order triggered from chat");
+        }
+      }
+    }
   } catch {
     response = botConfig.fallbackMessage;
   }
