@@ -136,23 +136,19 @@ router.post(
 router.post("/products/import/json", async (req, res) => {
   const { products: rawProducts } = req.body;
   if (!Array.isArray(rawProducts) || !rawProducts.length) {
-    res
-      .status(400)
-      .json({
-        error:
-          "Se esperaba un objeto { products: [...] } con al menos un producto",
-      });
+    res.status(400).json({
+      error:
+        "Se esperaba un objeto { products: [...] } con al menos un producto",
+    });
     return;
   }
   try {
     const products = parseProducts(rawProducts);
     if (!products.length) {
-      res
-        .status(400)
-        .json({
-          error:
-            "Ningún producto tiene los campos requeridos: name/nombre, price/precio, category/categoria",
-        });
+      res.status(400).json({
+        error:
+          "Ningún producto tiene los campos requeridos: name/nombre, price/precio, category/categoria",
+      });
       return;
     }
     const inserted = await db
@@ -190,23 +186,19 @@ router.post("/products/import/woocommerce", async (req, res) => {
 
     if (!response.ok) {
       const errText = await response.text().catch(() => response.statusText);
-      res
-        .status(400)
-        .json({
-          error: `WooCommerce respondió con error ${response.status}: ${errText.substring(0, 300)}`,
-        });
+      res.status(400).json({
+        error: `WooCommerce respondió con error ${response.status}: ${errText.substring(0, 300)}`,
+      });
       return;
     }
 
     const wcProducts = (await response.json()) as Record<string, unknown>[];
 
     if (!Array.isArray(wcProducts)) {
-      res
-        .status(400)
-        .json({
-          error:
-            "La respuesta de WooCommerce no es un array. Verifica la URL y las credenciales.",
-        });
+      res.status(400).json({
+        error:
+          "La respuesta de WooCommerce no es un array. Verifica la URL y las credenciales.",
+      });
       return;
     }
 
@@ -231,16 +223,15 @@ router.post("/products/import/woocommerce", async (req, res) => {
           ) || undefined,
         stock: parseInt(String(p.stock_quantity || "0"), 10) || 0,
         imageUrl: (p.images as { src: string }[])?.[0]?.src || undefined,
+        wooCommerceId: Number(p.id),
         isActive: true,
       }))
       .filter((p) => p.name && !isNaN(p.price));
 
     if (!products.length) {
-      res
-        .status(400)
-        .json({
-          error: `WooCommerce devolvió ${wcProducts.length} productos pero ninguno tiene nombre y precio válidos`,
-        });
+      res.status(400).json({
+        error: `WooCommerce devolvió ${wcProducts.length} productos pero ninguno tiene nombre y precio válidos`,
+      });
       return;
     }
 

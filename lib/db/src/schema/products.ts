@@ -20,6 +20,7 @@ export const productsTable = pgTable("products", {
   brand: text("brand"),
   stock: integer("stock").notNull().default(0),
   imageUrl: text("image_url"),
+  wooCommerceId: integer("woo_commerce_id"),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

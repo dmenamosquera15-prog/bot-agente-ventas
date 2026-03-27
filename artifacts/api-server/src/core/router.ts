@@ -602,6 +602,7 @@ INSTRUCCIONES FINALES:
             phone: orderData.phone || phone,
             line_items: [
               {
+                product_id: (dbProduct as any)?.wooCommerceId || undefined,
                 name: orderData.product_name,
                 quantity: orderData.quantity || 1,
               },
