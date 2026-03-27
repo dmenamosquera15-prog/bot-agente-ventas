@@ -587,6 +587,49 @@ Si no encuentras información clara, devuelve null.`,
         }
       } catch (err) {
         logger.error({ err }, "Error extrayendo producto para pago");
+        // Fallback: Si falla la API, intentar con regex simple
+        const productRegex = /• ([^|]+) \| Precio: \$([0-9.]+)/;
+        const allMatches = (
+          productContext + history.map((h) => h.content).join(" ")
+        ).match(new RegExp(productRegex, "g"));
+        if (allMatches && allMatches.length > 0) {
+          const productMatch = productRegex.exec(
+            allMatches[allMatches.length - 1],
+          );
+          if (productMatch) {
+            const productName = productMatch[1].trim();
+            const priceCOP = parseFloat(productMatch[2].replace(/\./g, ""));
+            const links = [];
+
+            if (
+              botConfig.paymentMethods?.toLowerCase().includes("mercado") ||
+              message.toLowerCase().includes("mercado")
+            ) {
+              const mpLink = await PaymentService.createMercadoPagoLink(
+                productName,
+                priceCOP,
+              );
+              if (mpLink)
+                links.push(`💳 *Pago con Mercado Pago (COP):*\n${mpLink}`);
+            }
+
+            if (
+              botConfig.paymentMethods?.toLowerCase().includes("paypal") ||
+              message.toLowerCase().includes("paypal")
+            ) {
+              const priceUSD = Math.round(priceCOP / 4000);
+              const ppLink = await PaymentService.createPayPalLink(
+                productName,
+                priceUSD || 1,
+              );
+              if (ppLink) links.push(`💰 *Pago con PayPal (USD):*\n${ppLink}`);
+            }
+
+            if (links.length > 0) {
+              response += `\n\n━━━━━━━━━━━━━━━━━━━━━\n🚀 *LINKS DE PAGO RÁPIDO:*\n${links.join("\n\n")}\n━━━━━━━━━━━━━━━━━━━━━`;
+            }
+          }
+        }
       }
     }
 
