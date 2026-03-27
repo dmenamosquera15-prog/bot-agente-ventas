@@ -25,7 +25,7 @@ export default defineConfig({
       workbox: {
         cleanupOutdatedCaches: true,
       },
-      includeAssets: ["favicon.ico", "apple-touch-icon.png", "masked-icon.svg"],
+      includeAssets: ["favicon.svg"],
       manifest: {
         name: "BotVentas IA Premium",
         short_name: "BotVentas",
@@ -36,20 +36,16 @@ export default defineConfig({
         orientation: "portrait",
         icons: [
           {
-            src: "pwa-192x192.png",
-            sizes: "192x192",
+            src: "/images/bot-logo.png",
+            sizes: "192x192 512x512",
             type: "image/png",
+            purpose: "any",
           },
           {
-            src: "pwa-512x512.png",
-            sizes: "512x512",
+            src: "/images/bot-logo.png",
+            sizes: "192x192 512x512",
             type: "image/png",
-          },
-          {
-            src: "pwa-512x512.png",
-            sizes: "512x512",
-            type: "image/png",
-            purpose: "any maskable",
+            purpose: "maskable",
           },
         ],
       },
