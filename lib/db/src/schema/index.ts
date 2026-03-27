@@ -6,3 +6,18 @@ export * from "./ai_providers";
 export * from "./agents";
 export * from "./saas";
 export * from "./knowledge";
+// SaaS Tables and Types
+export {
+  tenantsTable,
+  authUsersTable,
+  subscriptionsTable,
+  invoicesTable,
+  insertTenantSchema,
+  insertUserSchema,
+  insertSubscriptionSchema,
+  insertInvoiceSchema,
+  type Tenant,
+  type AuthUser,
+  type Subscription,
+  type Invoice,
+} from "./saas";
