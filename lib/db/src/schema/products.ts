@@ -1,4 +1,13 @@
-import { pgTable, text, serial, timestamp, real, integer, boolean, varchar } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  serial,
+  timestamp,
+  real,
+  integer,
+  boolean,
+  varchar,
+} from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -11,11 +20,13 @@ export const productsTable = pgTable("products", {
   brand: text("brand"),
   stock: integer("stock").notNull().default(0),
   imageUrl: text("image_url"),
-  wooCommerceId: integer("woo_commerce_id"),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const insertProductSchema = createInsertSchema(productsTable).omit({ id: true, createdAt: true });
+export const insertProductSchema = createInsertSchema(productsTable).omit({
+  id: true,
+  createdAt: true,
+});
 export type InsertProduct = z.infer<typeof insertProductSchema>;
 export type Product = typeof productsTable.$inferSelect;

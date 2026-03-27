@@ -496,28 +496,39 @@ INSTRUCCIONES FINALES:
     );
 
     // --- INTEGRACIÓN DE PAGOS DINÁMICOS (MEMORIA MAJESTUOSA) ---
-    if (intentData.intent === "metodo_pago" || intentData.intent === "compra" || agentKey === "cierre") {
+    if (
+      intentData.intent === "metodo_pago" ||
+      intentData.intent === "compra" ||
+      agentKey === "cierre"
+    ) {
       // Intentar identificar el producto del contexto actual o del HISTORIAL RECIENTE
       const productRegex = /• ([^|]+) \| Precio: \$([0-9.]+)/;
-      
+
       // 1. Buscar en el contexto actual
-      const currentProducts = productContext.match(new RegExp(productRegex, "g"));
+      const currentProducts = productContext.match(
+        new RegExp(productRegex, "g"),
+      );
       let productMatch = null;
 
       if (currentProducts && currentProducts.length > 0) {
         productMatch = productRegex.exec(currentProducts[0]);
-      } 
-      
+      }
+
       // 2. Si no hay en contexto, BUSCAR EN HISTORIAL (Memoria Majestuosa)
       if (!productMatch && history.length > 0) {
         // Recorrer el historial de atrás hacia adelante (solo mensajes del asistente)
         for (let i = history.length - 1; i >= 0; i--) {
           if (history[i].role === "assistant") {
-            const histMatches = history[i].content.match(new RegExp(productRegex, "g"));
+            const histMatches = history[i].content.match(
+              new RegExp(productRegex, "g"),
+            );
             if (histMatches && histMatches.length > 0) {
               productMatch = productRegex.exec(histMatches[0]);
               if (productMatch) {
-                logger.info({ productName: productMatch[1] }, "Producto recuperado de la memoria majestuosa");
+                logger.info(
+                  { productName: productMatch[1] },
+                  "Producto recuperado de la memoria majestuosa",
+                );
                 break;
               }
             }
@@ -530,18 +541,31 @@ INSTRUCCIONES FINALES:
         const priceCOP = parseFloat(productMatch[2].replace(/\./g, ""));
 
         const links = [];
-        
+
         // Generar link de Mercado Pago (Colombia)
-        if (botConfig.paymentMethods?.toLowerCase().includes("mercado") || message.toLowerCase().includes("mercado")) {
-          const mpLink = await PaymentService.createMercadoPagoLink(productName, priceCOP);
-          if (mpLink) links.push(`💳 *Pago con Mercado Pago (COP):*\n${mpLink}`);
+        if (
+          botConfig.paymentMethods?.toLowerCase().includes("mercado") ||
+          message.toLowerCase().includes("mercado")
+        ) {
+          const mpLink = await PaymentService.createMercadoPagoLink(
+            productName,
+            priceCOP,
+          );
+          if (mpLink)
+            links.push(`💳 *Pago con Mercado Pago (COP):*\n${mpLink}`);
         }
 
         // Generar link de PayPal (Internacional)
-        if (botConfig.paymentMethods?.toLowerCase().includes("paypal") || message.toLowerCase().includes("paypal")) {
+        if (
+          botConfig.paymentMethods?.toLowerCase().includes("paypal") ||
+          message.toLowerCase().includes("paypal")
+        ) {
           // Conversión aproximada a USD (TasaRef: 4000)
-          const priceUSD = Math.round(priceCOP / 4000); 
-          const ppLink = await PaymentService.createPayPalLink(productName, priceUSD || 1);
+          const priceUSD = Math.round(priceCOP / 4000);
+          const ppLink = await PaymentService.createPayPalLink(
+            productName,
+            priceUSD || 1,
+          );
           if (ppLink) links.push(`💰 *Pago con PayPal (USD):*\n${ppLink}`);
         }
 
@@ -554,17 +578,21 @@ INSTRUCCIONES FINALES:
     // --- AUTOMATIZACIÓN DE WOOCOMMERCE ---
     if (agentKey === "confirmacion" || intentData.intent === "pedido") {
       const orderData = await extractOrderData(history);
-      if (orderData && botConfig.wooCommerceUrl && botConfig.wooCommerceConsumerKey) {
+      if (
+        orderData &&
+        botConfig.wooCommerceUrl &&
+        botConfig.wooCommerceConsumerKey
+      ) {
         // Buscar el ID de producto en nuestra DB si es posible
         const dbProduct = await db.query.productsTable.findFirst({
-          where: ilike(productsTable.name, `%${orderData.product_name}%`)
+          where: ilike(productsTable.name, `%${orderData.product_name}%`),
         });
 
         const wcOrder = await WooCommerceService.createOrder(
           {
             url: botConfig.wooCommerceUrl,
             ck: botConfig.wooCommerceConsumerKey,
-            cs: botConfig.wooCommerceConsumerSecret || ""
+            cs: botConfig.wooCommerceConsumerSecret || "",
           },
           {
             first_name: orderData.first_name,
@@ -574,17 +602,19 @@ INSTRUCCIONES FINALES:
             phone: orderData.phone || phone,
             line_items: [
               {
-                product_id: (dbProduct as any)?.wooCommerceId || undefined,
                 name: orderData.product_name,
-                quantity: orderData.quantity || 1
-              }
-            ]
-          }
+                quantity: orderData.quantity || 1,
+              },
+            ],
+          },
         );
 
         if (wcOrder && (wcOrder as any).id) {
           response += `\n\n✅ *PEDIDO PROCESADO:* Tu pedido #${(wcOrder as any).id} ha sido registrado en nuestro sistema de despachos.`;
-          logger.info({ phone, wcOrderId: (wcOrder as any).id }, "WooCommerce order triggered from chat");
+          logger.info(
+            { phone, wcOrderId: (wcOrder as any).id },
+            "WooCommerce order triggered from chat",
+          );
         }
       }
     }
