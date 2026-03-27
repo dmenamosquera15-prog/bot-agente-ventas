@@ -2,6 +2,7 @@
 FROM node:20-slim AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
+ENV PNPM_IGNORE_SCRIPTS=true
 RUN corepack enable && apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
 
 FROM base AS build
