@@ -18,6 +18,7 @@ import {
 } from "@workspace/db/schema";
 import { eq, desc, ilike, and, or, sql } from "drizzle-orm";
 import { logger } from "../lib/logger.js";
+import OpenAI from "openai";
 
 async function getAgentPrompt(
   agentKey: string,
@@ -501,87 +502,102 @@ INSTRUCCIONES FINALES:
       intentData.intent === "compra" ||
       agentKey === "cierre"
     ) {
-      // Intentar identificar el producto del contexto actual o del HISTORIAL RECIENTE
-      const productRegex = /• ([^|]+) \| Precio: \$([0-9.]+)/;
+      // Usar IA para extraer el producto EXACTO que el cliente está pidiendo
+      try {
+        const client = new OpenAI({
+          apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+        });
+        const extractedProduct = await client.chat.completions.create({
+          model: "gpt-4o-mini",
+          messages: [
+            {
+              role: "system",
+              content: `Extrae el producto EXACTO que el cliente está pidiendo para pagar. 
+Si hay múltiples productos mencionados, identifica cuál es el que el cliente quiere AHORA.
+Busca el nombre del producto y su precio en COP (sin puntos de mil).
+Responde SOLO JSON:
+{
+  "product_name": "nombre exacto del producto",
+  "price_cop": número
+}
+Si no encuentras información clara, devuelve null.`,
+            },
+            ...history.slice(-5).map((h) => ({
+              role: h.role,
+              content: h.content,
+            })),
+            {
+              role: "user",
+              content: message,
+            },
+          ],
+          response_format: { type: "json_object" },
+          temperature: 0,
+        });
 
-      // 1. Buscar en el contexto actual
-      const currentProducts = productContext.match(
-        new RegExp(productRegex, "g"),
-      );
-      let productMatch = null;
+        const extractedData = JSON.parse(
+          extractedProduct.choices[0]?.message?.content || "null",
+        );
 
-      if (currentProducts && currentProducts.length > 0) {
-        productMatch = productRegex.exec(currentProducts[0]);
-      }
+        if (
+          extractedData &&
+          extractedData.product_name &&
+          extractedData.price_cop
+        ) {
+          const productName = extractedData.product_name.trim();
+          const priceCOP = extractedData.price_cop;
 
-      // 2. Si no hay en contexto, BUSCAR EN HISTORIAL (Memoria Majestuosa)
-      if (!productMatch && history.length > 0) {
-        // Recorrer el historial de atrás hacia adelante (solo mensajes del asistente)
-        for (let i = history.length - 1; i >= 0; i--) {
-          if (history[i].role === "assistant") {
-            const histMatches = history[i].content.match(
-              new RegExp(productRegex, "g"),
+          const links = [];
+
+          logger.info(
+            { productName, priceCOP },
+            "Producto extraído por IA para link de pago",
+          );
+
+          // Generar link de Mercado Pago (Colombia)
+          if (
+            botConfig.paymentMethods?.toLowerCase().includes("mercado") ||
+            message.toLowerCase().includes("mercado")
+          ) {
+            const mpLink = await PaymentService.createMercadoPagoLink(
+              productName,
+              priceCOP,
             );
-            if (histMatches && histMatches.length > 0) {
-              productMatch = productRegex.exec(histMatches[0]);
-              if (productMatch) {
-                logger.info(
-                  { productName: productMatch[1] },
-                  "Producto recuperado de la memoria majestuosa",
-                );
-                break;
-              }
-            }
+            if (mpLink)
+              links.push(`💳 *Pago con Mercado Pago (COP):*\n${mpLink}`);
+          }
+
+          // Generar link de PayPal (Internacional)
+          if (
+            botConfig.paymentMethods?.toLowerCase().includes("paypal") ||
+            message.toLowerCase().includes("paypal")
+          ) {
+            // Conversión aproximada a USD (TasaRef: 4000)
+            const priceUSD = Math.round(priceCOP / 4000);
+            const ppLink = await PaymentService.createPayPalLink(
+              productName,
+              priceUSD || 1,
+            );
+            if (ppLink) links.push(`💰 *Pago con PayPal (USD):*\n${ppLink}`);
+          }
+
+          if (links.length > 0) {
+            response += `\n\n━━━━━━━━━━━━━━━━━━━━━\n🚀 *LINKS DE PAGO RÁPIDO:*\n${links.join("\n\n")}\n━━━━━━━━━━━━━━━━━━━━━`;
           }
         }
-      }
-
-      if (productMatch) {
-        const productName = productMatch[1].trim();
-        const priceCOP = parseFloat(productMatch[2].replace(/\./g, ""));
-
-        const links = [];
-
-        // Generar link de Mercado Pago (Colombia)
-        if (
-          botConfig.paymentMethods?.toLowerCase().includes("mercado") ||
-          message.toLowerCase().includes("mercado")
-        ) {
-          const mpLink = await PaymentService.createMercadoPagoLink(
-            productName,
-            priceCOP,
-          );
-          if (mpLink)
-            links.push(`💳 *Pago con Mercado Pago (COP):*\n${mpLink}`);
-        }
-
-        // Generar link de PayPal (Internacional)
-        if (
-          botConfig.paymentMethods?.toLowerCase().includes("paypal") ||
-          message.toLowerCase().includes("paypal")
-        ) {
-          // Conversión aproximada a USD (TasaRef: 4000)
-          const priceUSD = Math.round(priceCOP / 4000);
-          const ppLink = await PaymentService.createPayPalLink(
-            productName,
-            priceUSD || 1,
-          );
-          if (ppLink) links.push(`💰 *Pago con PayPal (USD):*\n${ppLink}`);
-        }
-
-        if (links.length > 0) {
-          response += `\n\n━━━━━━━━━━━━━━━━━━━━━\n🚀 *LINKS DE PAGO RÁPIDO:*\n${links.join("\n\n")}\n━━━━━━━━━━━━━━━━━━━━━`;
-        }
+      } catch (err) {
+        logger.error({ err }, "Error extrayendo producto para pago");
       }
     }
 
     // --- AUTOMATIZACIÓN DE WOOCOMMERCE ---
     if (agentKey === "confirmacion" || intentData.intent === "pedido") {
       const orderData = await extractOrderData(history);
+      const wcConfig = botConfig as any; // Type casting para acceder a propiedades WooCommerce
       if (
         orderData &&
-        botConfig.wooCommerceUrl &&
-        botConfig.wooCommerceConsumerKey
+        wcConfig.wooCommerceUrl &&
+        wcConfig.wooCommerceConsumerKey
       ) {
         // Buscar el ID de producto en nuestra DB si es posible
         const dbProduct = await db.query.productsTable.findFirst({
@@ -590,9 +606,9 @@ INSTRUCCIONES FINALES:
 
         const wcOrder = await WooCommerceService.createOrder(
           {
-            url: botConfig.wooCommerceUrl,
-            ck: botConfig.wooCommerceConsumerKey,
-            cs: botConfig.wooCommerceConsumerSecret || "",
+            url: wcConfig.wooCommerceUrl,
+            ck: wcConfig.wooCommerceConsumerKey,
+            cs: wcConfig.wooCommerceConsumerSecret || "",
           },
           {
             first_name: orderData.first_name,
