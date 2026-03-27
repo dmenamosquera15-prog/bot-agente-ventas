@@ -29,6 +29,36 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Cache busting headers for dashboard
+app.use((req, res, next) => {
+  // Prevent caching of HTML files
+  if (req.path === "/" || req.path.endsWith(".html")) {
+    res.set({
+      "Cache-Control": "public, max-age=0, must-revalidate",
+      Pragma: "no-cache",
+      Expires: "0",
+    });
+  }
+  // Cache static assets with hash for a long time
+  else if (req.path.match(/\.[a-f0-9]{8}\.(js|css|png|jpg|svg)$/)) {
+    res.set({
+      "Cache-Control": "public, max-age=31536000, immutable",
+    });
+  }
+  // Service worker should not be cached
+  else if (
+    req.path.endsWith(".js") &&
+    (req.path.includes("sw.js") || req.path.includes("registerSW"))
+  ) {
+    res.set({
+      "Cache-Control": "public, max-age=0, must-revalidate",
+      Pragma: "no-cache",
+      Expires: "0",
+    });
+  }
+  next();
+});
+
 app.use("/api", router);
 
 // --- SERVIDOR TODO-EN-UNO (API + DASHBOARD) ---

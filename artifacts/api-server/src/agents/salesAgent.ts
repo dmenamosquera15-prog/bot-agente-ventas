@@ -70,7 +70,7 @@ export async function handle(
 
   const productContext =
     products.length > 0
-      ? `PRODUCTOS DISPONIBLES:\n${products.map((p) => `- ${p.name}: $${p.price} (${p.category}, Stock: ${p.stock}${p.description ? ", " + p.description : ""})`).join("\n")}`
+      ? `PRODUCTOS DISPONIBLES:\n${products.map((p) => `- ${p.name}: $${p.price} COP 💰 (${p.category}, Stock: ${p.stock}${p.description ? ", " + p.description : ""})`).join("\n")}`
       : "";
 
   const systemPrompt = `Eres ${botConfig.botName}, el agente de ventas de ${botConfig.businessName}.

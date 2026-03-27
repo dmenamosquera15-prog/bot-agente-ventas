@@ -10,26 +10,36 @@ export async function handle(
   intentData: { intent: string; entities: Record<string, string> },
   message: string,
   history: Array<{ role: "user" | "assistant"; content: string }>,
-  botConfig: { businessName: string; botName: string }
+  botConfig: { businessName: string; botName: string },
 ): Promise<string> {
   const { intent, entities } = intentData;
 
-  let products: typeof productsTable.$inferSelect[] = [];
+  let products: (typeof productsTable.$inferSelect)[] = [];
   try {
     if (entities.product || entities.brand || entities.category) {
-      const searchTerm = entities.product || entities.brand || entities.category || "";
-      products = await db.select().from(productsTable).where(
-        ilike(productsTable.name, `%${searchTerm}%`)
-      ).limit(3);
+      const searchTerm =
+        entities.product || entities.brand || entities.category || "";
+      products = await db
+        .select()
+        .from(productsTable)
+        .where(ilike(productsTable.name, `%${searchTerm}%`))
+        .limit(3);
     }
     if (products.length === 0) {
-      products = await db.select().from(productsTable).where(eq(productsTable.isActive, true)).limit(3);
+      products = await db
+        .select()
+        .from(productsTable)
+        .where(eq(productsTable.isActive, true))
+        .limit(3);
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 
-  const productContext = products.length > 0
-    ? `PRODUCTOS DISPONIBLES:\n${products.map(p => `- ${p.name}: $${p.price} (${p.description || "Sin descripción adicional"})`).join("\n")}`
-    : "";
+  const productContext =
+    products.length > 0
+      ? `PRODUCTOS DISPONIBLES:\n${products.map((p) => `- ${p.name}: $${p.price} COP 💰 (${p.description || "Sin descripción adicional"})`).join("\n")}`
+      : "";
 
   const systemPrompt = `Eres ${botConfig.botName}, el agente técnico especialista de ${botConfig.businessName}.
 
