@@ -40,9 +40,19 @@ app.use((req, res, next) => {
     });
   }
   // Cache static assets with hash for a long time
-  else if (req.path.match(/\.[a-f0-9]{8}\.(js|css|png|jpg|svg)$/)) {
+  else if (req.path.match(/\.[a-f0-9]{8}\.(js|css|png|jpg|svg|jpg)$/)) {
     res.set({
       "Cache-Control": "public, max-age=31536000, immutable",
+    });
+  }
+  // Images and other static assets - short cache for updates
+  else if (
+    req.path.startsWith("/images/") ||
+    req.path.startsWith("/assets/") ||
+    req.path.match(/\.(png|jpg|jpeg|gif|svg|ico)$/i)
+  ) {
+    res.set({
+      "Cache-Control": "public, max-age=3600, must-revalidate",
     });
   }
   // Service worker should not be cached
