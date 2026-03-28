@@ -147,42 +147,18 @@ export async function connectWithPhone(
 let currentSocketId = 0;
 let isConnectingSocket = false;
 
+let qrGeneratedTime = 0;
+const QR_EXPIRE_MS = 90000; // 90 segundos
+
 export async function connect(phoneForPairing?: string): Promise<void> {
-  // Prevenir múltiples conexiones simultáneas
-  if (isConnectingSocket) {
-    logger.info("Connection attempt already in progress, skipping...");
-    return;
-  }
-
   const thisSocketId = ++currentSocketId;
-
-  if (isConnected) {
-    logger.info("WhatsApp already connected, skipping...");
-    return;
-  }
-
-  if (phoneForPairing && sock && !isConnected) {
-    logger.info("Forcing reconnection for pairing code...");
-    try {
-      sock.end(undefined);
-    } catch {}
-    sock = null;
-  }
-
-  if (sock) {
-    try {
-      sock.end(undefined);
-    } catch {}
-    sock = null;
-  }
-
-  isConnectingSocket = true;
 
   if (!existsSync(AUTH_DIR)) mkdirSync(AUTH_DIR, { recursive: true });
 
   isConnecting = true;
   qrCode = null;
   pairingCode = null;
+  qrGeneratedTime = 0;
 
   try {
     const { state, saveCreds } = await useMultiFileAuthState(AUTH_DIR);
@@ -236,14 +212,25 @@ export async function connect(phoneForPairing?: string): Promise<void> {
         qrCode = qr;
         pairingCode = null;
         isConnected = false;
+        qrGeneratedTime = Date.now();
         logger.info("WhatsApp QR generated - esperando escaneo...");
       }
 
-      if (update.qr) {
-        logger.info(
-          { qr: update.qr.slice(0, 50) + "..." },
-          "QR actualizado en connection.update",
-        );
+      // Timeout: si pasan 90 segundos sin conectar, generar nuevo QR
+      if (
+        qrCode &&
+        qrGeneratedTime > 0 &&
+        Date.now() - qrGeneratedTime > QR_EXPIRE_MS
+      ) {
+        logger.warn("QR expirado sin conexión, generando nuevo QR...");
+        qrGeneratedTime = 0;
+        qrCode = null;
+        // Forzar reconexión
+        setTimeout(() => {
+          if (thisSocketId === currentSocketId) {
+            connect().catch(() => {});
+          }
+        }, 1000);
       }
 
       if (connection === "open") {
@@ -252,6 +239,7 @@ export async function connect(phoneForPairing?: string): Promise<void> {
         isConnectingSocket = false;
         qrCode = null;
         pairingCode = null;
+        qrGeneratedTime = 0;
         connectedPhone = sock?.user?.id?.split(":")[0] || null;
         logger.info(
           { phone: connectedPhone },
