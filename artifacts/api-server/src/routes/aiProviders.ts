@@ -52,12 +52,18 @@ const MODELS: Record<string, string[]> = {
     "command-r-plus-08-2024",
   ],
   ollama: [
-    "claude-3-5-sonnet",
+    "claude-3.5-sonnet",
     "claude-3-haiku",
     "llama3.1",
     "mistral",
     "qwen2.5",
     "phi3",
+    "kimi-k2.5:cloud",
+    "glm-5:cloud",
+    "minimax-m2.7:cloud",
+    "qwen3.5:cloud",
+    "glm-4.7-flash",
+    "qwen3.5",
   ],
 };
 
