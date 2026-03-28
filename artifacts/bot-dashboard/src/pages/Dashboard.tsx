@@ -39,15 +39,15 @@ export default function Dashboard() {
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-1000">
       <div>
-        <h1 className="text-5xl font-black text-white tracking-tight italic">
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight italic">
           Resumen <span className="text-emerald-500">General.</span>
         </h1>
-        <p className="text-slate-400 mt-3 text-xl font-medium">
+        <p className="text-slate-400 mt-3 text-base sm:text-xl font-medium">
           Monitorea el rendimiento de tu inteligencia de ventas en tiempo real.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
         <MetricCard
           title="Conversaciones (24h)"
           value={m.messagesLast24h}
@@ -191,24 +191,24 @@ function MetricCard({ title, value, icon: Icon, trend, color }: any) {
   };
 
   return (
-    <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden group hover:border-emerald-500/30 transition-all duration-300">
+    <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[2rem] p-5 sm:p-8 shadow-2xl relative overflow-hidden group hover:border-emerald-500/30 transition-all duration-300">
       <div className={`absolute -right-10 -top-10 w-32 h-32 ${color === 'emerald' ? 'bg-emerald-500' : 'bg-slate-400'}/10 rounded-full blur-3xl transition-opacity opacity-0 group-hover:opacity-100`} />
-      
-      <div className="flex justify-between items-start mb-8 relative z-10">
-        <p className="text-slate-500 font-black uppercase tracking-[0.2em] text-[10px]">
+
+      <div className="flex justify-between items-start mb-6 relative z-10">
+        <p className="text-slate-500 font-black uppercase tracking-[0.15em] text-[9px] sm:text-[10px] leading-tight">
           {title}
         </p>
-        <div className={cn("p-4 rounded-2xl shadow-inner", colors[color] || colors.emerald)}>
-          <Icon size={24} />
+        <div className={cn("p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-inner", colors[color] || colors.emerald)}>
+          <Icon size={20} className="sm:w-6 sm:h-6" />
         </div>
       </div>
-      
-      <div className="flex items-end gap-3 relative z-10">
-        <h3 className="text-4xl font-black text-white italic tracking-tight">
+
+      <div className="flex items-end gap-2 sm:gap-3 relative z-10">
+        <h3 className="text-3xl sm:text-4xl font-black text-white italic tracking-tight">
           {value}
         </h3>
         {trend && (
-          <span className="text-xs font-black text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-lg mb-2 shadow-sm">
+          <span className="text-[10px] sm:text-xs font-black text-emerald-400 bg-emerald-500/10 px-2 py-0.5 sm:py-1 rounded-md sm:rounded-lg shadow-sm whitespace-nowrap">
             {trend}
           </span>
         )}

@@ -2,6 +2,19 @@ import OpenAI from "openai";
 import { db } from "@workspace/db";
 import { aiProvidersTable, agentsTable } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
+import { logger } from "../lib/logger.js";
+
+const OLLAMA_HOST = process.env.OLLAMA_HOST || "http://localhost:11434";
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "kimi-k2.5:cloud";
+const USE_OLLAMA = process.env.USE_OLLAMA === "true";
+
+const KIMI_CONFIG = {
+  temperature: 0.3,
+  maxTokens: 600,
+  topP: 0.85,
+  frequencyPenalty: 0.3,
+  presencePenalty: 0.2,
+};
 
 export interface IntentResult {
   intent: string;
@@ -36,8 +49,48 @@ const INTENTS = [
   "desconocido",
 ];
 
-async function getClient(): Promise<{ client: OpenAI; model: string }> {
-  // 1. PRIORITIZE DB PROVIDERS (SET VIA DASHBOARD)
+let consecutiveErrors = 0;
+const MAX_CONSECUTIVE_ERRORS = 5;
+let lastErrorTime = 0;
+const ERROR_COOLDOWN_MS = 60000;
+
+async function getClient(): Promise<{ client: OpenAI; model: string; isOllama: boolean }> {
+  const now = Date.now();
+
+  // Circuit breaker
+  if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
+    if (now - lastErrorTime < ERROR_COOLDOWN_MS) {
+      logger.warn("Circuit breaker activado - demasiados errores");
+      throw new Error("Servicio IA no disponible temporalmente");
+    }
+    consecutiveErrors = 0;
+  }
+
+  // 0. OLLAMA (if enabled)
+  if (USE_OLLAMA) {
+    try {
+      const client = new OpenAI({
+        baseURL: OLLAMA_HOST,
+        apiKey: "ollama",
+        timeout: 60000,
+        maxRetries: 2,
+      });
+
+      const response = await fetch(`${OLLAMA_HOST.replace('/v1', '')}/api/tags`, {
+        signal: AbortSignal.timeout(5000)
+      });
+
+      if (response.ok) {
+        logger.debug("Ollama health check passed");
+        consecutiveErrors = 0;
+        return { client, model: OLLAMA_MODEL, isOllama: true };
+      }
+    } catch (err: any) {
+      logger.warn({ error: err.message }, "Ollama no disponible, usando fallback");
+    }
+  }
+
+  // 1. DB PROVIDERS
   try {
     const provider = await db.query.aiProvidersTable.findFirst({
       where: eq(aiProvidersTable.isDefault, true),
@@ -46,32 +99,33 @@ async function getClient(): Promise<{ client: OpenAI; model: string }> {
       const client = new OpenAI({
         apiKey: provider.apiKey,
         baseURL: provider.baseUrl || undefined,
+        timeout: 30000,
       });
-      return { client, model: provider.model || "gpt-4o" };
+      consecutiveErrors = 0;
+      return { client, model: provider.model || "gpt-4o", isOllama: false };
     }
   } catch (err: any) {
     console.error("DEBUG: DB provider fetch failed", err?.message);
   }
 
-  // 2. FALLBACK TO ENV GITHUB_TOKEN
+  // 2. GITHUB_TOKEN fallback
   if (process.env.GITHUB_TOKEN) {
+    consecutiveErrors = 0;
     return {
       client: new OpenAI({
         baseURL: process.env.GITHUB_BASE_URL || "https://models.inference.ai.azure.com",
         apiKey: process.env.GITHUB_TOKEN,
+        timeout: 30000,
       }),
       model: process.env.GITHUB_MODEL || "gpt-4o",
+      isOllama: false,
     };
   }
 
-  // Final fallback
-  return {
-    client: new OpenAI({
-      baseURL: "https://models.inference.ai.azure.com",
-      apiKey: "none",
-    }),
-    model: "gpt-4o",
-  };
+  // No providers available
+  lastErrorTime = now;
+  consecutiveErrors++;
+  throw new Error("No hay proveedores de IA disponibles");
 }
 
 export async function classifyIntent(message: string): Promise<IntentResult> {

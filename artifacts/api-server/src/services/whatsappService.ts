@@ -22,6 +22,7 @@ import { handleMessage } from "../core/router.js";
 import { logger } from "../lib/logger.js";
 import { SafeReconnectManager } from "./safeReconnectManager.js";
 import { SafeBaileysSender } from "./safeBaileysSender.js";
+import { shouldProcessWhatsAppMessage, isSpamMessage } from "../middlewares/rateLimit.js";
 import OpenAI from "openai";
 import { db } from "@workspace/db";
 import { botConfigTable } from "@workspace/db/schema";
@@ -141,8 +142,15 @@ export async function connectWithPhone(
 }
 
 let currentSocketId = 0;
+let isConnectingSocket = false;
 
 export async function connect(phoneForPairing?: string): Promise<void> {
+  // Prevenir múltiples conexiones simultáneas
+  if (isConnectingSocket) {
+    logger.info("Connection attempt already in progress, skipping...");
+    return;
+  }
+
   const thisSocketId = ++currentSocketId;
 
   if (isConnected) {
@@ -164,6 +172,8 @@ export async function connect(phoneForPairing?: string): Promise<void> {
     } catch {}
     sock = null;
   }
+
+  isConnectingSocket = true;
 
   if (!existsSync(AUTH_DIR)) mkdirSync(AUTH_DIR, { recursive: true });
 
@@ -230,6 +240,7 @@ export async function connect(phoneForPairing?: string): Promise<void> {
       if (connection === "open") {
         isConnected = true;
         isConnecting = false;
+        isConnectingSocket = false;
         qrCode = null;
         pairingCode = null;
         connectedPhone = sock?.user?.id?.split(":")[0] || null;
@@ -241,6 +252,7 @@ export async function connect(phoneForPairing?: string): Promise<void> {
         isConnected = false;
         connectedPhone = null;
         qrCode = null;
+        isConnectingSocket = false;
 
         const statusCode = (lastDisconnect?.error as Boom)?.output?.statusCode;
         const errorMessage = (lastDisconnect?.error as any)?.message || "";
@@ -392,6 +404,20 @@ export async function connect(phoneForPairing?: string): Promise<void> {
         }
 
         if (!text || !text.trim()) continue;
+
+        // === RATE LIMITING Y ANTI-SPAM ===
+        const spamCheck = isSpamMessage(text);
+        if (spamCheck.isSpam) {
+          logger.warn({ phone, text: text.slice(0, 50), reason: spamCheck.reason }, "Spam detected, ignoring");
+          continue;
+        }
+
+        const rateLimitCheck = shouldProcessWhatsAppMessage(phone);
+        if (!rateLimitCheck.allowed) {
+          logger.warn({ phone, reason: rateLimitCheck.reason, retryAfter: rateLimitCheck.retryAfter }, "Rate limit exceeded");
+          await SafeBaileysSender.sendText(sock, "default", jid, "⏳ Has enviado demasiados mensajes. Espera un momento.");
+          continue;
+        }
 
         logger.info({ phone, text }, "WhatsApp message received");
 

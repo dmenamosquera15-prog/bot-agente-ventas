@@ -119,34 +119,29 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="absolute bottom-[-10%] right-[-10%] w-[70%] h-[70%] bg-blue-500/5 rounded-full blur-[120px]" />
       </div>
 
-      {/* MOBILE TOP BAR (Native Look) */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-[#020617]/80 backdrop-blur-2xl border-b border-white/5 z-40 px-6 flex items-center justify-between">
+      {/* MOBILE TOP BAR (Native Look) - Improved spacing */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-[72px] bg-[#020617]/90 backdrop-blur-3xl border-b border-white/10 z-40 px-5 flex items-center justify-between shadow-2xl">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center text-sm shadow-lg shadow-emerald-500/20 text-slate-950 font-black">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-lg shadow-lg shadow-emerald-500/30 text-slate-950 font-black">
             B
           </div>
-          <h1 className="font-black text-sm text-white tracking-tight uppercase italic">
-            BotVentas <span className="text-emerald-500">IA</span>
-          </h1>
-        </div>
-        
-        <div className="flex items-center gap-4">
-          {deferredPrompt && (
-            <button 
-              onClick={handleInstallClick}
-              className="p-2 bg-emerald-500/10 text-emerald-500 rounded-lg animate-bounce"
-            >
-              <Download size={18} />
-            </button>
-          )}
-          <div className={cn(
-            "flex items-center gap-2 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all",
-            wa.connected ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-red-500/10 border-red-500/30 text-red-500"
-          )}>
-            {wa.connected ? <Wifi size={10} /> : <WifiOff size={10} />}
-            {wa.connected ? "Live" : "Offline"}
+          <div>
+            <h1 className="font-black text-base text-white tracking-tight uppercase italic leading-tight">
+              BotVentas <span className="text-emerald-400">IA</span>
+            </h1>
+            <p className="text-[8px] text-slate-400 font-bold tracking-wider -mt-0.5">Panel de Control</p>
           </div>
-          <button onClick={() => setSidebarOpen(true)} className="text-slate-400">
+        </div>
+
+        <div className="flex items-center gap-2">
+          <div className={cn(
+            "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all shadow-lg",
+            wa.connected ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-300 shadow-emerald-500/10" : "bg-red-500/20 border-red-500/40 text-red-300 shadow-red-500/10"
+          )}>
+            {wa.connected ? <Wifi size={12} /> : <WifiOff size={12} />}
+            {wa.connected ? "Online" : "Offline"}
+          </div>
+          <button onClick={() => setSidebarOpen(true)} className="text-slate-300 p-2 hover:bg-white/10 rounded-xl transition-all">
             <Menu size={24} />
           </button>
         </div>
@@ -258,25 +253,27 @@ export function Layout({ children }: { children: React.ReactNode }) {
         )}
       </aside>
 
-      {/* MOBILE BOTTOM NAVIGATION (Tab Bar) */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 height-[calc(70px+env(safe-area-inset-bottom))] bg-slate-950/80 backdrop-blur-3xl border-t border-white/5 z-40 px-4 pb-[env(safe-area-inset-bottom)]">
-        <div className="flex items-center justify-around h-[70px]">
+      {/* MOBILE BOTTOM NAVIGATION (Tab Bar) - Improved spacing */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-[84px] bg-slate-950/90 backdrop-blur-3xl border-t border-white/10 z-40 px-2 pb-[env(safe-area-inset-bottom)] shadow-2xl">
+        <div className="flex items-center justify-around h-full">
           {MOBILE_BOTTOM_NAV.map((item) => {
             const isActive = location === item.href;
             return (
               <Link key={item.href} href={item.href}>
                 <div className={cn(
-                  "flex flex-col items-center gap-1.5 transition-all relative px-4",
-                  isActive ? "text-emerald-400" : "text-slate-500"
+                  "flex flex-col items-center gap-1 transition-all relative px-3 py-2 rounded-2xl",
+                  isActive ? "text-emerald-400 bg-emerald-500/10" : "text-slate-500 hover:text-slate-300"
                 )}>
                   {isActive && (
-                    <motion.div 
+                    <motion.div
                       layoutId="bottomTab"
-                      className="absolute -top-3 w-8 h-1 bg-emerald-500 rounded-full"
+                      className="absolute -top-2 w-12 h-1 bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full shadow-lg shadow-emerald-500/30"
                     />
                   )}
-                  <item.icon size={22} strokeWidth={isActive ? 2.5 : 2} />
-                  <span className="text-[10px] font-black uppercase tracking-widest">{item.label}</span>
+                  <div className={cn("p-1 rounded-xl transition-all", isActive ? "bg-emerald-500/20" : "")}>
+                    <item.icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+                  </div>
+                  <span className="text-[9px] font-black uppercase tracking-wider">{item.label}</span>
                 </div>
               </Link>
             )
@@ -286,9 +283,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       <main className={cn(
         "flex-1 lg:ml-[280px] min-h-screen relative z-10 transition-all duration-300",
-        "pt-16 lg:pt-0" // Padding for mobile top bar
+        "pt-[80px] lg:pt-0"
       )}>
-        <div className="p-6 md:p-12 max-w-7xl mx-auto pb-32 lg:pb-12">
+        <div className="p-4 md:p-8 lg:p-12 max-w-7xl mx-auto pb-[100px] lg:pb-12">
           <motion.div
             key={location}
             initial={{ opacity: 0, scale: 0.98, y: 10 }}
