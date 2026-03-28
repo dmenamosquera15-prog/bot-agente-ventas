@@ -16,6 +16,7 @@ import {
   unlinkSync,
   createReadStream,
   rmSync,
+  readFileSync,
 } from "fs";
 import { join } from "path";
 import { handleMessage } from "../core/router.js";
@@ -148,8 +149,9 @@ let currentSocketId = 0;
 let isConnectingSocket = false;
 
 let qrGeneratedTime = 0;
-const QR_EXPIRE_MS = 90000; // 90 segundos
-let wasConnectedOnce = false; // Track si ya se conectó al menos una vez
+const QR_EXPIRE_MS = 180000; // 3 minutos para escanear
+let wasConnectedOnce = false;
+let reconnectWithFreshAuth = false;
 
 export async function connect(phoneForPairing?: string): Promise<void> {
   const thisSocketId = ++currentSocketId;
@@ -167,6 +169,29 @@ export async function connect(phoneForPairing?: string): Promise<void> {
     sock = null;
   }
 
+  // Limpiar auth si hay conflicto o si reconnectWithFreshAuth está activo
+  const authExists = existsSync(AUTH_DIR);
+  if (authExists) {
+    try {
+      const credsPath = join(AUTH_DIR, "creds.json");
+      if (existsSync(credsPath)) {
+        const credsContent = JSON.parse(readFileSync(credsPath, "utf-8"));
+        if (
+          !credsContent.me ||
+          !credsContent.account ||
+          reconnectWithFreshAuth
+        ) {
+          logger.warn("Creds corruptos o reinicio forzado, limpiando...");
+          rmSync(AUTH_DIR, { recursive: true, force: true });
+          reconnectWithFreshAuth = false;
+        }
+      }
+    } catch (err) {
+      logger.warn({ err }, "Error verificando creds, limpiando auth");
+      rmSync(AUTH_DIR, { recursive: true, force: true });
+    }
+  }
+
   if (!existsSync(AUTH_DIR)) mkdirSync(AUTH_DIR, { recursive: true });
 
   isConnecting = true;
@@ -179,7 +204,13 @@ export async function connect(phoneForPairing?: string): Promise<void> {
     const { state, saveCreds } = await useMultiFileAuthState(AUTH_DIR);
     const { version } = await fetchLatestBaileysVersion();
 
-    logger.info({ registered: state.creds.registered }, "Auth state loaded");
+    logger.info(
+      { registered: state.creds.registered, hasMe: !!state.creds.me },
+      "Auth state loaded",
+    );
+
+    // Usar browser específico para evitar rechazo
+    const browserConfig = Browsers.ubuntu("Chrome");
 
     sock = makeWASocket({
       version,
@@ -188,11 +219,12 @@ export async function connect(phoneForPairing?: string): Promise<void> {
         keys: makeCacheableSignalKeyStore(state.keys, logger as never),
       },
       logger: logger as never,
-      browser: ["Chrome", "Chrome", "115.0.0"],
+      browser: browserConfig,
       generateHighQualityLinkPreview: true,
       syncFullHistory: false,
-      qrTimeout: 60000,
-      printQRInTerminal: false, // No imprimir QR en terminal
+      qrTimeout: 180000, // 3 minutos para escanear
+      printQRInTerminal: false,
+      connectTimeoutMs: 60000,
     });
 
     if (thisSocketId !== currentSocketId) {
@@ -333,7 +365,7 @@ export async function connect(phoneForPairing?: string): Promise<void> {
 
           logger.warn(
             { consecutiveErrors, errorMessage },
-            "WhatsApp conflict error, attempting recovery",
+            "WhatsApp conflict detected - another session is active. Waiting and retrying...",
           );
 
           if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
@@ -341,18 +373,26 @@ export async function connect(phoneForPairing?: string): Promise<void> {
             isConnecting = false;
             consecutiveErrors = 0;
             SafeReconnectManager.resetState("default");
+            reconnectWithFreshAuth = true;
             setTimeout(() => {
               forceReset().catch((err) =>
                 logger.error({ err }, "Force reset failed"),
               );
-            }, 3000);
+            }, 5000);
           } else {
             SafeReconnectManager.recordDisconnect();
-            if (SafeReconnectManager.canReconnect()) {
-              SafeReconnectManager.startReconnect("default", async () => {
+            // En caso de conflicto, simplemente esperar más tiempo antes de reintentar
+            // Esto permite que el usuario cierre la otra sesión
+            const conflictDelay = Math.min(
+              10000 + consecutiveErrors * 5000,
+              60000,
+            );
+            logger.info(`Waiting ${conflictDelay / 1000}s before retry...`);
+            setTimeout(async () => {
+              if (SafeReconnectManager.canReconnect()) {
                 await connect();
-              });
-            }
+              }
+            }, conflictDelay);
           }
         } else if (isRestartRequired || isTimedOut) {
           SafeReconnectManager.recordDisconnect();
@@ -531,6 +571,9 @@ export async function disconnect(): Promise<void> {
 
 export async function forceReset(): Promise<void> {
   logger.warn("Forcing WhatsApp reset and clearing auth cache...");
+  reconnectWithFreshAuth = true;
+  consecutiveErrors = 0;
+  SafeReconnectManager.resetState("default");
   await disconnect();
   try {
     if (existsSync(AUTH_DIR)) {
