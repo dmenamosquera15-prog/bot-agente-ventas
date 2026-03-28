@@ -446,12 +446,14 @@ export async function connect(phoneForPairing?: string): Promise<void> {
             },
             "Rate limit exceeded",
           );
-          await SafeBaileysSender.sendText(
-            sock,
-            "default",
-            jid,
-            "⏳ Has enviado demasiados mensajes. Espera un momento.",
-          );
+          if (sock) {
+            await SafeBaileysSender.sendText(
+              sock,
+              "default",
+              jid,
+              "⏳ Has enviado demasiados mensajes. Espera un momento.",
+            );
+          }
           continue;
         }
 
