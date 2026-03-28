@@ -149,13 +149,28 @@ let isConnectingSocket = false;
 
 let qrGeneratedTime = 0;
 const QR_EXPIRE_MS = 90000; // 90 segundos
+let wasConnectedOnce = false; // Track si ya se conectó al menos una vez
 
 export async function connect(phoneForPairing?: string): Promise<void> {
   const thisSocketId = ++currentSocketId;
 
+  // Limpiar socket anterior si existe
+  if (sock) {
+    try {
+      sock.ev.removeAllListeners("connection.update");
+      sock.ev.removeAllListeners("creds.update");
+      sock.ev.removeAllListeners("messages.upsert");
+      await sock.end(undefined);
+    } catch (err) {
+      logger.warn({ err }, "Error closing previous socket");
+    }
+    sock = null;
+  }
+
   if (!existsSync(AUTH_DIR)) mkdirSync(AUTH_DIR, { recursive: true });
 
   isConnecting = true;
+  isConnectingSocket = true;
   qrCode = null;
   pairingCode = null;
   qrGeneratedTime = 0;
@@ -163,6 +178,8 @@ export async function connect(phoneForPairing?: string): Promise<void> {
   try {
     const { state, saveCreds } = await useMultiFileAuthState(AUTH_DIR);
     const { version } = await fetchLatestBaileysVersion();
+
+    logger.info({ registered: state.creds.registered }, "Auth state loaded");
 
     sock = makeWASocket({
       version,
@@ -175,6 +192,7 @@ export async function connect(phoneForPairing?: string): Promise<void> {
       generateHighQualityLinkPreview: true,
       syncFullHistory: false,
       qrTimeout: 60000,
+      printQRInTerminal: false, // No imprimir QR en terminal
     });
 
     if (thisSocketId !== currentSocketId) {
@@ -237,6 +255,7 @@ export async function connect(phoneForPairing?: string): Promise<void> {
         isConnected = true;
         isConnecting = false;
         isConnectingSocket = false;
+        wasConnectedOnce = true; // Marcar que ya se conectó exitosamente
         qrCode = null;
         pairingCode = null;
         qrGeneratedTime = 0;
@@ -245,27 +264,21 @@ export async function connect(phoneForPairing?: string): Promise<void> {
           { phone: connectedPhone },
           "WhatsApp connected - ESCANEADO EXITOSO",
         );
+        logger.info("=== SESSION GUARDADA CORRECTAMENTE ===");
         startHealthCheck();
       }
 
       if (connection === "close") {
+        const wasConnected = isConnected;
         isConnected = false;
         connectedPhone = null;
-        qrCode = null;
         isConnectingSocket = false;
 
         const statusCode = (lastDisconnect?.error as Boom)?.output?.statusCode;
         const errorMessage = (lastDisconnect?.error as any)?.message || "";
 
-        logger.error(
-          {
-            statusCode,
-            errorMessage,
-            lastDisconnect,
-          },
-          "WhatsApp conexión cerrada después de escanear QR",
-        );
-
+        // Si ya se conectó antes y se desconecta, NO limpiar auth automáticamente
+        // Esto previene que se borre la sesión después de escanear exitosamente
         const isLoggedOut = statusCode === DisconnectReason.loggedOut;
         const isBadSession = statusCode === DisconnectReason.badSession;
         const isRestartRequired =
@@ -276,6 +289,7 @@ export async function connect(phoneForPairing?: string): Promise<void> {
         const isConflict =
           errorMessage.includes("conflict") ||
           errorMessage.includes("Stream Errored");
+        const isCloseAfterConnect = wasConnected && wasConnectedOnce;
 
         logger.warn(
           {
@@ -284,16 +298,18 @@ export async function connect(phoneForPairing?: string): Promise<void> {
             isBadSession,
             isRestartRequired,
             isConflict,
+            isCloseAfterConnect,
+            wasConnected,
+            wasConnectedOnce,
             errorMessage,
           },
           "WhatsApp disconnected",
         );
 
-        if (isLoggedOut || isBadSession) {
+        // Solo limpiar auth si es logged out o bad session REAL (no después de conectar exitosamente)
+        if ((isLoggedOut || isBadSession) && !isCloseAfterConnect) {
           isConnecting = false;
-          logger.info(
-            "Logged out or bad session, cleaning auth and requesting new QR...",
-          );
+          logger.info("Cleaning auth - session invalid");
           try {
             if (existsSync(AUTH_DIR)) {
               rmSync(AUTH_DIR, { recursive: true, force: true });
@@ -301,6 +317,11 @@ export async function connect(phoneForPairing?: string): Promise<void> {
             }
           } catch (e) {}
           await connect();
+        } else if (isCloseAfterConnect) {
+          // Reconectar sin limpiar auth - fue una desconexión normal
+          logger.info("Reconnecting after normal disconnect...");
+          isConnecting = false;
+          setTimeout(() => connect(), 3000);
         } else if (isConflict) {
           const now = Date.now();
           if (now - lastErrorTime < ERROR_RESET_WINDOW) {
