@@ -6,13 +6,59 @@ import { eq } from "drizzle-orm";
 const router: IRouter = Router();
 
 const MODELS: Record<string, string[]> = {
-  openai: ["gpt-5-mini", "gpt-5", "gpt-5.2", "gpt-4o", "gpt-4o-mini", "o4-mini"],
-  groq: ["llama3-8b-8192", "llama3-70b-8192", "mixtral-8x7b-32768", "gemma2-9b-it"],
+  openai: [
+    "gpt-5-mini",
+    "gpt-5",
+    "gpt-5.2",
+    "gpt-4o",
+    "gpt-4o-mini",
+    "o4-mini",
+  ],
+  groq: [
+    "llama3-8b-8192",
+    "llama3-70b-8192",
+    "mixtral-8x7b-32768",
+    "gemma2-9b-it",
+  ],
   grok: ["grok-3", "grok-3-mini", "grok-3-fast", "grok-2-1212", "grok-beta"],
-  anthropic: ["claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022", "claude-3-opus-20240229"],
-  openrouter: ["meta-llama/llama-3.1-8b-instruct", "mistralai/mistral-7b-instruct", "google/gemma-2-9b-it"],
-  github_copilot: ["gpt-4o", "gpt-4o-mini", "claude-3.5-sonnet", "claude-3.7-sonnet", "claude-3.7-sonnet-thought", "gemini-2.0-flash", "o3-mini", "o1"],
-  github_models: ["gpt-4o", "gpt-4o-mini", "o3-mini", "o1", "phi-3-medium", "phi-3-mini", "mistral-large-2407", "command-r-plus-08-2024"],
+  anthropic: [
+    "claude-3-5-sonnet-20241022",
+    "claude-3-5-haiku-20241022",
+    "claude-3-opus-20240229",
+  ],
+  openrouter: [
+    "meta-llama/llama-3.1-8b-instruct",
+    "mistralai/mistral-7b-instruct",
+    "google/gemma-2-9b-it",
+  ],
+  github_copilot: [
+    "gpt-4o",
+    "gpt-4o-mini",
+    "claude-3.5-sonnet",
+    "claude-3.7-sonnet",
+    "claude-3.7-sonnet-thought",
+    "gemini-2.0-flash",
+    "o3-mini",
+    "o1",
+  ],
+  github_models: [
+    "gpt-4o",
+    "gpt-4o-mini",
+    "o3-mini",
+    "o1",
+    "phi-3-medium",
+    "phi-3-mini",
+    "mistral-large-2407",
+    "command-r-plus-08-2024",
+  ],
+  ollama: [
+    "claude-3-5-sonnet",
+    "claude-3-haiku",
+    "llama3.1",
+    "mistral",
+    "qwen2.5",
+    "phi3",
+  ],
 };
 
 const BASE_URLS: Record<string, string> = {
@@ -25,7 +71,7 @@ const BASE_URLS: Record<string, string> = {
 router.get("/ai-providers", async (_req, res) => {
   const providers = await db.select().from(aiProvidersTable);
   res.json({
-    providers: providers.map(p => ({
+    providers: providers.map((p) => ({
       ...p,
       id: String(p.id),
       apiKey: p.apiKey ? "••••••••" + p.apiKey.slice(-4) : "",
@@ -43,34 +89,59 @@ router.post("/ai-providers", async (req, res) => {
   if (isDefault) {
     await db.update(aiProvidersTable).set({ isDefault: false });
   }
-  const [p] = await db.insert(aiProvidersTable).values({
-    name, provider, apiKey, baseUrl, model, isActive: true, isDefault: !!isDefault,
-  }).returning();
+  const [p] = await db
+    .insert(aiProvidersTable)
+    .values({
+      name,
+      provider,
+      apiKey,
+      baseUrl,
+      model,
+      isActive: true,
+      isDefault: !!isDefault,
+    })
+    .returning();
   res.status(201).json({ ...p, id: String(p.id), apiKey: "••••" });
 });
 
 router.put("/ai-providers/:id", async (req, res) => {
   const id = Number(req.params.id);
-  const { name, provider, apiKey, baseUrl, model, isActive, isDefault } = req.body;
-  const updates: Record<string, unknown> = { name, provider, baseUrl, model, isActive };
+  const { name, provider, apiKey, baseUrl, model, isActive, isDefault } =
+    req.body;
+  const updates: Record<string, unknown> = {
+    name,
+    provider,
+    baseUrl,
+    model,
+    isActive,
+  };
   if (apiKey && !apiKey.startsWith("••••")) updates.apiKey = apiKey;
   if (isDefault) {
     await db.update(aiProvidersTable).set({ isDefault: false });
     updates.isDefault = true;
   }
-  const [p] = await db.update(aiProvidersTable).set(updates).where(eq(aiProvidersTable.id, id)).returning();
+  const [p] = await db
+    .update(aiProvidersTable)
+    .set(updates)
+    .where(eq(aiProvidersTable.id, id))
+    .returning();
   res.json({ ...p, id: String(p.id), apiKey: "••••" });
 });
 
 router.delete("/ai-providers/:id", async (req, res) => {
-  await db.delete(aiProvidersTable).where(eq(aiProvidersTable.id, Number(req.params.id)));
+  await db
+    .delete(aiProvidersTable)
+    .where(eq(aiProvidersTable.id, Number(req.params.id)));
   res.json({ success: true, message: "Deleted" });
 });
 
 router.post("/ai-providers/:id/set-default", async (req, res) => {
   const id = Number(req.params.id);
   await db.update(aiProvidersTable).set({ isDefault: false });
-  await db.update(aiProvidersTable).set({ isDefault: true, isActive: true }).where(eq(aiProvidersTable.id, id));
+  await db
+    .update(aiProvidersTable)
+    .set({ isDefault: true, isActive: true })
+    .where(eq(aiProvidersTable.id, id));
   res.json({ success: true });
 });
 
