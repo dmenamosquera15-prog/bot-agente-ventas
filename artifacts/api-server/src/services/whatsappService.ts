@@ -236,7 +236,14 @@ export async function connect(phoneForPairing?: string): Promise<void> {
         qrCode = qr;
         pairingCode = null;
         isConnected = false;
-        logger.info("WhatsApp QR generated");
+        logger.info("WhatsApp QR generated - esperando escaneo...");
+      }
+
+      if (update.qr) {
+        logger.info(
+          { qr: update.qr.slice(0, 50) + "..." },
+          "QR actualizado en connection.update",
+        );
       }
 
       if (connection === "open") {
@@ -246,7 +253,10 @@ export async function connect(phoneForPairing?: string): Promise<void> {
         qrCode = null;
         pairingCode = null;
         connectedPhone = sock?.user?.id?.split(":")[0] || null;
-        logger.info({ phone: connectedPhone }, "WhatsApp connected");
+        logger.info(
+          { phone: connectedPhone },
+          "WhatsApp connected - ESCANEADO EXITOSO",
+        );
         startHealthCheck();
       }
 
@@ -258,6 +268,15 @@ export async function connect(phoneForPairing?: string): Promise<void> {
 
         const statusCode = (lastDisconnect?.error as Boom)?.output?.statusCode;
         const errorMessage = (lastDisconnect?.error as any)?.message || "";
+
+        logger.error(
+          {
+            statusCode,
+            errorMessage,
+            lastDisconnect,
+          },
+          "WhatsApp conexión cerrada después de escanear QR",
+        );
 
         const isLoggedOut = statusCode === DisconnectReason.loggedOut;
         const isBadSession = statusCode === DisconnectReason.badSession;
