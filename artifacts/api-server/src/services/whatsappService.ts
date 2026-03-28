@@ -22,7 +22,10 @@ import { handleMessage } from "../core/router.js";
 import { logger } from "../lib/logger.js";
 import { SafeReconnectManager } from "./safeReconnectManager.js";
 import { SafeBaileysSender } from "./safeBaileysSender.js";
-import { shouldProcessWhatsAppMessage, isSpamMessage } from "../middlewares/rateLimit.js";
+import {
+  shouldProcessWhatsAppMessage,
+  isSpamMessage,
+} from "../middlewares/rateLimit.js";
 import OpenAI from "openai";
 import { db } from "@workspace/db";
 import { botConfigTable } from "@workspace/db/schema";
@@ -191,7 +194,6 @@ export async function connect(phoneForPairing?: string): Promise<void> {
         creds: state.creds,
         keys: makeCacheableSignalKeyStore(state.keys, logger as never),
       },
-      printQRInTerminal: true,
       logger: logger as never,
       browser: ["Chrome", "Chrome", "115.0.0"],
       generateHighQualityLinkPreview: true,
@@ -408,14 +410,29 @@ export async function connect(phoneForPairing?: string): Promise<void> {
         // === RATE LIMITING Y ANTI-SPAM ===
         const spamCheck = isSpamMessage(text);
         if (spamCheck.isSpam) {
-          logger.warn({ phone, text: text.slice(0, 50), reason: spamCheck.reason }, "Spam detected, ignoring");
+          logger.warn(
+            { phone, text: text.slice(0, 50), reason: spamCheck.reason },
+            "Spam detected, ignoring",
+          );
           continue;
         }
 
         const rateLimitCheck = shouldProcessWhatsAppMessage(phone);
         if (!rateLimitCheck.allowed) {
-          logger.warn({ phone, reason: rateLimitCheck.reason, retryAfter: rateLimitCheck.retryAfter }, "Rate limit exceeded");
-          await SafeBaileysSender.sendText(sock, "default", jid, "⏳ Has enviado demasiados mensajes. Espera un momento.");
+          logger.warn(
+            {
+              phone,
+              reason: rateLimitCheck.reason,
+              retryAfter: rateLimitCheck.retryAfter,
+            },
+            "Rate limit exceeded",
+          );
+          await SafeBaileysSender.sendText(
+            sock,
+            "default",
+            jid,
+            "⏳ Has enviado demasiados mensajes. Espera un momento.",
+          );
           continue;
         }
 
