@@ -18,4 +18,4 @@ WORKDIR /usr/src/app
 COPY --from=build /usr/src/app /usr/src/app
 
 EXPOSE 5000
-CMD [ "pnpm", "--filter", "@workspace/api-server", "start" ]
+CMD [ "pnpm", "--filter", "@workspace/api-server", "start:prod" ]

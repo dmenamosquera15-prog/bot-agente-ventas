@@ -7,6 +7,7 @@
     "dev": "cross-env NODE_ENV=development tsx watch --env-file=../../.env src/index.ts",
     "build": "node ./build.mjs",
     "start": "node --env-file=../../.env --enable-source-maps ./dist/index.mjs",
+    "start:prod": "node --enable-source-maps ./dist/index.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
