@@ -33,31 +33,22 @@ interface WaStatus {
 
 const NAV = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/chat", label: "Chat", icon: MessagesSquare },
   { href: "/whatsapp", label: "WhatsApp", icon: Smartphone },
-  { href: "/chat", label: "Probar Bot", icon: MessagesSquare },
-  { href: "/conversations", label: "Conversaciones", icon: MessageSquare },
-  { href: "/clients", label: "Clientes", icon: Users },
   { label: "─", divider: true },
+  { href: "/clients", label: "Clientes", icon: Users },
   { href: "/products", label: "Productos", icon: Package },
-  {
-    href: "/products/import",
-    label: "Importar Productos",
-    icon: Upload,
-    indent: true,
-  },
-  { href: "/agents/edit", label: "Agentes IA", icon: Bot },
-  { href: "/ai-providers", label: "Proveedores IA", icon: Cpu },
+  { href: "/conversations", label: "Conversaciones", icon: MessageSquare },
+  { label: "─", divider: true },
   {
     href: "/github-copilot",
     label: "GitHub Copilot",
     icon: BrainCircuit,
-    indent: true,
+    featured: true,
   },
-  { href: "/admin-copilot", label: "Admin Co-Pilot", icon: Sparkle },
-  { href: "/git-sync", label: "GitHub Sync", icon: Github },
   { label: "─", divider: true },
-  { href: "/membership", label: "Membresía", icon: Crown },
-  { href: "/billing", label: "Facturación", icon: Receipt },
+  { href: "/agents", label: "Agentes", icon: Bot },
+  { href: "/ai-providers", label: "Proveedores IA", icon: Cpu },
   { href: "/config", label: "Configuración", icon: Settings },
   { label: "─", divider: true },
   { action: "logout", label: "Cerrar Sesión", icon: X },
@@ -65,8 +56,12 @@ const NAV = [
 
 const MOBILE_BOTTOM_NAV = [
   { href: "/", label: "Inicio", icon: LayoutDashboard },
+  { href: "/chat", label: "Chat", icon: MessagesSquare },
   { href: "/whatsapp", label: "WhatsApp", icon: Smartphone },
-  { href: "/products", label: "Catálogo", icon: Package },
+  { href: "/clients", label: "Clientes", icon: Users },
+  { href: "/products", label: "Productos", icon: Package },
+  { href: "/conversations", label: "Conversaciones", icon: MessageSquare },
+  { href: "/agents", label: "Agentes", icon: Bot },
   { href: "/config", label: "Ajustes", icon: Settings },
 ];
 
@@ -109,40 +104,46 @@ export function Layout({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#020617] text-slate-200 selection:bg-emerald-500/30 font-sans overflow-x-hidden">
+    <div className="flex min-h-screen bg-[#0f1724] text-slate-100 selection:bg-emerald-500/30 font-sans overflow-x-hidden">
       {/* PWA / Native Elements Support */}
       <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover" />
-      
-      {/* Background Glows */}
+
+      {/* Animated Background Gradient - Softer and more professional */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute top-[-10%] left-[-10%] w-[70%] h-[70%] bg-emerald-500/5 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[70%] h-[70%] bg-blue-500/5 rounded-full blur-[120px]" />
+        <div className="absolute top-[-20%] left-[-10%] w-[80%] h-[80%] bg-gradient-to-br from-emerald-600/6 via-emerald-500/3 to-transparent rounded-full blur-[150px]" />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[80%] h-[80%] bg-gradient-to-tl from-blue-600/6 via-blue-500/3 to-transparent rounded-full blur-[150px]" />
+        <div className="absolute top-[40%] left-[50%] -translate-x-1/2 w-[60%] h-[60%] bg-violet-600/4 rounded-full blur-[120px]" />
       </div>
 
-      {/* MOBILE TOP BAR (Native Look) - Improved spacing */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-[72px] bg-[#020617]/90 backdrop-blur-3xl border-b border-white/10 z-40 px-5 flex items-center justify-between shadow-2xl">
+      {/* MOBILE TOP BAR - Premium Design */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-[80px] bg-[#0f1724]/90 backdrop-blur-2xl border-b border-white/10 z-40 px-5 flex items-center justify-between shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-lg shadow-lg shadow-emerald-500/30 text-slate-950 font-black">
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-700 flex items-center justify-center text-xl shadow-[0_4px_20px_rgba(16,185,129,0.4)] text-slate-950 font-black transform transition-transform hover:scale-105">
             B
           </div>
           <div>
             <h1 className="font-black text-base text-white tracking-tight uppercase italic leading-tight">
               BotVentas <span className="text-emerald-400">IA</span>
             </h1>
-            <p className="text-[8px] text-slate-400 font-bold tracking-wider -mt-0.5">Panel de Control</p>
+            <p className="text-[8px] text-slate-400 font-bold tracking-[0.2em] -mt-0.5">DASHBOARD</p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           <div className={cn(
-            "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all shadow-lg",
-            wa.connected ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-300 shadow-emerald-500/10" : "bg-red-500/20 border-red-500/40 text-red-300 shadow-red-500/10"
+            "flex items-center gap-2 px-3.5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all shadow-lg min-w-[80px] justify-center",
+            wa.connected
+              ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-200 shadow-[0_0_20px_rgba(16,185,129,0.2)]"
+              : "bg-red-500/20 border-red-500/40 text-red-200 shadow-[0_0_20px_rgba(239,68,68,0.2)]"
           )}>
-            {wa.connected ? <Wifi size={12} /> : <WifiOff size={12} />}
-            {wa.connected ? "Online" : "Offline"}
+            <div className={cn(
+              "w-2 h-2 rounded-full animate-pulse",
+              wa.connected ? "bg-emerald-400" : "bg-red-400"
+            )} />
+            {wa.connected ? "ONLINE" : "OFFLINE"}
           </div>
-          <button onClick={() => setSidebarOpen(true)} className="text-slate-300 p-2 hover:bg-white/10 rounded-xl transition-all">
-            <Menu size={24} />
+          <button onClick={() => setSidebarOpen(true)} className="text-slate-200 p-2.5 hover:bg-white/10 rounded-xl transition-all active:scale-95">
+            <Menu size={22} />
           </button>
         </div>
       </div>
@@ -150,51 +151,59 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {/* SIDEBAR (Desktop & Mobile Drawer) */}
       <AnimatePresence>
         {sidebarOpen && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSidebarOpen(false)}
-            className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+            className="lg:hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-40"
           />
         )}
       </AnimatePresence>
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex flex-col bg-slate-950/80 backdrop-blur-3xl border-r border-white/5 shadow-2xl transition-all duration-500 ease-in-out lg:translate-x-0 w-[280px]",
+          "fixed inset-y-0 left-0 z-50 flex flex-col bg-[#0b1220]/95 backdrop-blur-2xl border-r border-white/10 shadow-[8px_0_32px_rgba(0,0,0,0.4)] transition-all duration-500 ease-in-out lg:translate-x-0 w-[300px]",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         {/* Brand */}
-        <div className="p-8 flex items-center gap-4 border-b border-white/5 shrink-0 hidden lg:flex">
-          <div className="w-10 h-10 rounded-2xl bg-emerald-500 flex items-center justify-center text-xl shadow-lg shadow-emerald-500/20 text-slate-950">
+        <div className="p-6 flex items-center gap-4 border-b border-white/5 shrink-0 hidden lg:flex relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-blue-500/5" />
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-700 flex items-center justify-center text-2xl shadow-[0_4px_20px_rgba(16,185,129,0.3)] text-slate-950 font-black transform hover:scale-105 transition-transform">
             🤖
           </div>
-          <div>
+          <div className="relative z-10">
             <h1 className="font-black text-lg text-white leading-none tracking-tight italic">
-              BotVentas <span className="text-emerald-500">IA</span>
+              BotVentas <span className="text-emerald-400">IA</span>
             </h1>
-            <p className="text-[10px] text-emerald-500 uppercase font-black tracking-[0.2em] mt-1.5 opacity-80">
+            <p className="text-[9px] text-emerald-400/80 uppercase font-black tracking-[0.25em] mt-2">
               PRO PANEL
             </p>
           </div>
         </div>
 
         {/* Mobile Sidebar Close */}
-        <div className="lg:hidden p-8 flex items-center justify-between border-b border-white/5">
-           <span className="font-black italic text-emerald-500 tracking-widest text-xs uppercase">Menú Principal</span>
-           <button onClick={() => setSidebarOpen(false)} className="p-2 bg-white/5 rounded-xl">
+        <div className="lg:hidden p-6 flex items-center justify-between border-b border-white/5 bg-gradient-to-r from-emerald-500/5 to-transparent">
+           <span className="font-black italic text-emerald-400 tracking-widest text-xs uppercase">Menú Principal</span>
+           <button onClick={() => setSidebarOpen(false)} className="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl transition-all">
               <X size={20} />
            </button>
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-4 py-8 space-y-1 overflow-y-auto scrollbar-hide pb-20 lg:pb-8">
+        <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto scrollbar-hide pb-20 lg:pb-6">
           {NAV.map((item, i) => {
             if ("divider" in item)
-              return <div key={i} className="my-6 mx-4 border-t border-white/5" />;
-            
+              return (
+                <div
+                  key={i}
+                  className="my-5 mx-4 border-t border-white/5 relative"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-transparent opacity-0 hover:opacity-100 transition-opacity" />
+                </div>
+              );
+
             if ("action" in item && item.action === "logout") {
               return (
                 <button
@@ -203,36 +212,50 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     localStorage.clear();
                     window.location.href = "/landing";
                   }}
-                  className="w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl text-sm font-bold text-slate-500 hover:bg-red-500/10 hover:text-red-400 transition-all active:scale-95"
+                  className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold text-slate-500 hover:bg-red-500/10 hover:text-red-400 transition-all active:scale-[0.98] group"
                 >
-                  <X size={18} />
+                  <X size={18} className="group-hover:scale-110 transition-transform" />
                   {item.label}
                 </button>
               );
             }
 
             const isActive = item.href && (location === item.href || (item.href !== "/" && location.startsWith(item.href)));
-            
+
             return item.href ? (
               <Link key={item.href} href={item.href}>
                 <div
                   onClick={() => setSidebarOpen(false)}
                   className={cn(
-                    "flex items-center gap-3 px-5 py-3.5 rounded-2xl text-sm font-bold transition-all cursor-pointer relative group leading-none",
-                    "indent" in item && item.indent ? "ml-5 text-xs opacity-70" : "",
+                    "flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold transition-all cursor-pointer relative group leading-none",
+                    "indent" in item && item.indent ? "ml-4 text-xs opacity-70" : "",
                     isActive
-                      ? "bg-emerald-600/15 text-emerald-400 border border-emerald-500/20"
-                      : "text-slate-500 hover:text-white hover:bg-white/5 border border-transparent"
+                      ? "bg-gradient-to-r from-emerald-500/20 to-emerald-500/10 text-emerald-200 border border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.15)]"
+                      : "text-slate-300 hover:text-white hover:bg-white/[0.05] border border-transparent"
                   )}
                 >
                   {isActive && (
-                    <motion.div 
+                    <motion.div
                       layoutId="activeTab"
-                      className="absolute inset-0 bg-emerald-500/10 rounded-2xl -z-10"
+                      className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-transparent rounded-xl -z-10"
+                      initial={false}
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
                     />
                   )}
-                  <item.icon size={18} className={cn("transition-transform group-hover:scale-110", isActive ? "text-emerald-400" : "text-slate-600")} />
-                  {item.label}
+                  <item.icon
+                    size={18}
+                    className={cn(
+                      "transition-all duration-300",
+                      isActive
+                        ? "text-emerald-300 scale-110"
+                        : "text-slate-500 group-hover:text-slate-300"
+                    )}
+                    strokeWidth={isActive ? 2.5 : 2}
+                  />
+                  <span className="flex-1">{item.label}</span>
+                  {isActive && (
+                    <ChevronRight size={16} className="text-emerald-300 opacity-0 group-hover:opacity-100 transition-all transform group-hover:translate-x-1" />
+                  )}
                 </div>
               </Link>
             ) : null;
@@ -253,27 +276,38 @@ export function Layout({ children }: { children: React.ReactNode }) {
         )}
       </aside>
 
-      {/* MOBILE BOTTOM NAVIGATION (Tab Bar) - Improved spacing */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-[84px] bg-slate-950/90 backdrop-blur-3xl border-t border-white/10 z-40 px-2 pb-[env(safe-area-inset-bottom)] shadow-2xl">
+      {/* MOBILE BOTTOM NAVIGATION (Tab Bar) - Premium */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-[88px] bg-[#0b1220]/95 backdrop-blur-2xl border-t border-white/10 z-40 px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_32px_rgba(0,0,0,0.4)]">
         <div className="flex items-center justify-around h-full">
           {MOBILE_BOTTOM_NAV.map((item) => {
             const isActive = location === item.href;
             return (
               <Link key={item.href} href={item.href}>
                 <div className={cn(
-                  "flex flex-col items-center gap-1 transition-all relative px-3 py-2 rounded-2xl",
-                  isActive ? "text-emerald-400 bg-emerald-500/10" : "text-slate-500 hover:text-slate-300"
+                  "flex flex-col items-center gap-1.5 transition-all relative px-4 py-2.5 rounded-2xl group",
+                  isActive ? "text-emerald-300" : "text-slate-400 hover:text-slate-200"
                 )}>
                   {isActive && (
                     <motion.div
                       layoutId="bottomTab"
-                      className="absolute -top-2 w-12 h-1 bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full shadow-lg shadow-emerald-500/30"
+                      className="absolute -top-3 w-14 h-1 bg-gradient-to-r from-emerald-400 via-emerald-500 to-emerald-600 rounded-full shadow-[0_0_15px_rgba(16,185,129,0.5)]"
+                      initial={false}
+                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
                     />
                   )}
-                  <div className={cn("p-1 rounded-xl transition-all", isActive ? "bg-emerald-500/20" : "")}>
-                    <item.icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+                  <div className={cn(
+                    "p-2 rounded-xl transition-all duration-300",
+                    isActive
+                      ? "bg-gradient-to-br from-emerald-500/25 to-emerald-500/10 scale-110 shadow-lg shadow-emerald-500/20"
+                      : "group-hover:bg-white/[0.02]"
+                  )}>
+                    <item.icon
+                      size={22}
+                      strokeWidth={isActive ? 2.5 : 2}
+                      className={cn("transition-all", isActive ? "scale-105" : "")}
+                    />
                   </div>
-                  <span className="text-[9px] font-black uppercase tracking-wider">{item.label}</span>
+                  <span className="text-[9px] font-black uppercase tracking-[0.15em]">{item.label}</span>
                 </div>
               </Link>
             )
@@ -282,7 +316,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </nav>
 
       <main className={cn(
-        "flex-1 lg:ml-[280px] min-h-screen relative z-10 transition-all duration-300",
+        "flex-1 lg:ml-[300px] min-h-screen relative z-10 transition-all duration-300",
         "pt-[80px] lg:pt-0"
       )}>
         <div className="p-4 md:p-8 lg:p-12 max-w-7xl mx-auto pb-[100px] lg:pb-12">

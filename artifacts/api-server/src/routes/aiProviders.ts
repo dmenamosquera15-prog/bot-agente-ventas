@@ -65,6 +65,14 @@ const MODELS: Record<string, string[]> = {
     "glm-4.7-flash",
     "qwen3.5",
   ],
+  kimi: [
+    "kimi-latest",
+    "kimi-preview",
+    "kimi-fast",
+    "moonshot-v1-8k",
+    "moonshot-v1-32k",
+    "moonshot-v1-128k",
+  ],
 };
 
 const BASE_URLS: Record<string, string> = {
@@ -72,6 +80,9 @@ const BASE_URLS: Record<string, string> = {
   groq: "https://api.groq.com/openai/v1",
   anthropic: "https://api.anthropic.com/v1",
   github_models: "https://models.inference.ai.azure.com",
+  github_copilot: "https://api.github.com",
+  kimi: "https://api.moonshot.cn/v1",
+  ollama: "http://localhost:11434/v1",
 };
 
 router.get("/ai-providers", async (_req, res) => {
@@ -90,15 +101,41 @@ router.get("/ai-providers/models", async (_req, res) => {
   res.json({ models: MODELS });
 });
 
+function applyDefaults(data: any) {
+  const { provider, baseUrl, model } = data;
+  let finalBaseUrl = baseUrl;
+  let finalModel = model;
+
+  if (!baseUrl || baseUrl === "") {
+    finalBaseUrl = BASE_URLS[provider] || "";
+    if (provider === "openai") finalBaseUrl = "https://api.openai.com/v1";
+    if (provider === "ollama") finalBaseUrl = process.env.OLLAMA_HOST || "http://localhost:11434/v1";
+    if (provider === "openrouter") finalBaseUrl = "https://openrouter.ai/api/v1";
+    if (provider === "github_copilot") finalBaseUrl = "https://api.github.com";
+  }
+
+  if (!model || model === "") {
+    const available = MODELS[provider];
+    if (available && available.length > 0) {
+      finalModel = available[available.length > 3 ? 3 : 0]; // Select a balanced default
+    }
+  }
+
+  return { ...data, baseUrl: finalBaseUrl, model: finalModel };
+}
+
 router.post("/ai-providers", async (req, res) => {
-  const { name, provider, apiKey, baseUrl, model, isDefault } = req.body;
+  let body = applyDefaults(req.body);
+  const { name, provider, apiKey, baseUrl, model, isDefault } = body;
+  
   if (isDefault) {
     await db.update(aiProvidersTable).set({ isDefault: false });
   }
+  
   const [p] = await db
     .insert(aiProvidersTable)
     .values({
-      name,
+      name: name || `${provider.toUpperCase()} Provider`,
       provider,
       apiKey,
       baseUrl,
@@ -112,8 +149,9 @@ router.post("/ai-providers", async (req, res) => {
 
 router.put("/ai-providers/:id", async (req, res) => {
   const id = Number(req.params.id);
-  const { name, provider, apiKey, baseUrl, model, isActive, isDefault } =
-    req.body;
+  let body = applyDefaults(req.body);
+  const { name, provider, apiKey, baseUrl, model, isActive, isDefault } = body;
+  
   const updates: Record<string, unknown> = {
     name,
     provider,
@@ -121,11 +159,13 @@ router.put("/ai-providers/:id", async (req, res) => {
     model,
     isActive,
   };
+  
   if (apiKey && !apiKey.startsWith("••••")) updates.apiKey = apiKey;
   if (isDefault) {
     await db.update(aiProvidersTable).set({ isDefault: false });
     updates.isDefault = true;
   }
+  
   const [p] = await db
     .update(aiProvidersTable)
     .set(updates)
@@ -149,6 +189,33 @@ router.post("/ai-providers/:id/set-default", async (req, res) => {
     .set({ isDefault: true, isActive: true })
     .where(eq(aiProvidersTable.id, id));
   res.json({ success: true });
+});
+
+// Ollama status endpoint
+router.get("/ollama/status", async (_req, res) => {
+  try {
+    const ollamaHost = process.env.OLLAMA_HOST || "http://localhost:11434";
+    const baseUrl = ollamaHost.replace('/v1', '').replace('/api', '');
+
+    const response = await fetch(`${baseUrl}/api/tags`, {
+      signal: AbortSignal.timeout(5000)
+    });
+
+    if (response.ok) {
+      const data = (await response.json()) as any;
+      res.json({
+        connected: true,
+        host: baseUrl,
+        models: data.models?.map((m: any) => m.name) || [],
+        primary: process.env.OLLAMA_MODEL_PRIMARY || "kimi-k2.5:cloud",
+        fallback: process.env.OLLAMA_MODEL_FALLBACK || "glm-5:cloud"
+      });
+    } else {
+      res.json({ connected: false, error: "Ollama no responde" });
+    }
+  } catch (err: any) {
+    res.json({ connected: false, error: err.message });
+  }
 });
 
 export default router;

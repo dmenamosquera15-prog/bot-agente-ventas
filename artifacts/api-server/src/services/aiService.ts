@@ -5,15 +5,14 @@ import { eq } from "drizzle-orm";
 import { logger } from "../lib/logger.js";
 
 const OLLAMA_HOST = process.env.OLLAMA_HOST || "http://localhost:11434";
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "kimi-k2.5:cloud";
-const USE_OLLAMA = process.env.USE_OLLAMA === "true";
+const OLLAMA_MODEL_PRIMARY = process.env.OLLAMA_MODEL_PRIMARY || "kimi-k2.5:cloud";
+const OLLAMA_MODEL_FALLBACK = process.env.OLLAMA_MODEL_FALLBACK || "glm-5:cloud";
+const USE_OLLAMA = process.env.USE_OLLAMA === "true" || !!process.env.OLLAMA_HOST;
 
-const KIMI_CONFIG = {
-  temperature: 0.3,
-  maxTokens: 600,
-  topP: 0.85,
-  frequencyPenalty: 0.3,
-  presencePenalty: 0.2,
+// Ollama models configuration
+const OLLAMA_MODELS = {
+  primary: OLLAMA_MODEL_PRIMARY,
+  fallback: OLLAMA_MODEL_FALLBACK,
 };
 
 export interface IntentResult {
@@ -54,215 +53,251 @@ const MAX_CONSECUTIVE_ERRORS = 5;
 let lastErrorTime = 0;
 const ERROR_COOLDOWN_MS = 60000;
 
-async function getClient(): Promise<{ client: OpenAI; model: string; isOllama: boolean }> {
+async function getClientInternal(
+  preferFast: boolean = false, 
+  triedIds: Set<string> = new Set()
+): Promise<{ client: OpenAI, model: string, providerId: string }> {
   const now = Date.now();
 
-  // Circuit breaker
-  if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
-    if (now - lastErrorTime < ERROR_COOLDOWN_MS) {
-      logger.warn("Circuit breaker activado - demasiados errores");
-      throw new Error("Servicio IA no disponible temporalmente");
-    }
-    consecutiveErrors = 0;
-  }
-
-  // 0. OLLAMA (if enabled)
-  if (USE_OLLAMA) {
+  // 1. OLLAMA (Primary)
+  if (USE_OLLAMA && !triedIds.has("ollama")) {
     try {
-      const client = new OpenAI({
-        baseURL: OLLAMA_HOST,
-        apiKey: "ollama",
-        timeout: 60000,
-        maxRetries: 2,
-      });
+      const ollamaBaseUrl = OLLAMA_HOST.replace('/v1', '').replace('/api', '');
+      const response = await fetch(`${ollamaBaseUrl}/api/tags`, {
+        signal: AbortSignal.timeout(2500)
+      }).catch(() => null);
 
-      const response = await fetch(`${OLLAMA_HOST.replace('/v1', '')}/api/tags`, {
-        signal: AbortSignal.timeout(5000)
-      });
+      if (response && response.ok) {
+        const data = await response.json() as any;
+        const availableModels = data.models?.map((m: any) => m.name) || [];
+        
+        let selectedModel = OLLAMA_MODELS.primary;
+        if (!availableModels.some((m: string) => m.includes(OLLAMA_MODELS.primary))) {
+          selectedModel = availableModels.some((m: string) => m.includes(OLLAMA_MODELS.fallback)) 
+            ? OLLAMA_MODELS.fallback 
+            : (availableModels[0] || OLLAMA_MODELS.primary);
+        }
 
-      if (response.ok) {
-        logger.debug("Ollama health check passed");
-        consecutiveErrors = 0;
-        return { client, model: OLLAMA_MODEL, isOllama: true };
+        return {
+          client: new OpenAI({ baseURL: `${ollamaBaseUrl}/v1`, apiKey: "ollama", timeout: 80000 }),
+          model: selectedModel,
+          providerId: "ollama"
+        };
       }
-    } catch (err: any) {
-      logger.warn({ error: err.message }, "Ollama no disponible, usando fallback");
-    }
+    } catch (err) { /* silent fail to next */ }
   }
 
-  // 1. DB PROVIDERS
+  // 2. DB PROVIDERS
   try {
-    const provider = await db.query.aiProvidersTable.findFirst({
-      where: eq(aiProvidersTable.isDefault, true),
+    const providers = await db.query.aiProvidersTable.findMany({
+      where: eq(aiProvidersTable.isActive, true),
+      orderBy: (p, { desc }) => [desc(p.isDefault)]
     });
-    if (provider && provider.apiKey && provider.apiKey.trim() !== "") {
-      const client = new OpenAI({
-        apiKey: provider.apiKey,
-        baseURL: provider.baseUrl || undefined,
-        timeout: 30000,
-      });
-      consecutiveErrors = 0;
-      return { client, model: provider.model || "gpt-4o", isOllama: false };
+
+    for (const p of providers) {
+      const pid = `db_${p.id}`;
+      if (triedIds.has(pid) || !p.apiKey) continue;
+
+      const defaultHeaders: Record<string, string> = {};
+      if (
+        p.provider === "github_copilot" || 
+        p.provider === "github_models" || 
+        p.baseUrl?.includes("github.com") || 
+        p.baseUrl?.includes("azure.com")
+      ) {
+        defaultHeaders["Editor-Version"] = "vscode/1.95.3";
+        defaultHeaders["User-Agent"] = "vscode-copilot";
+      }
+
+      return {
+        client: new OpenAI({ 
+          apiKey: p.apiKey, 
+          baseURL: p.baseUrl || undefined, 
+          timeout: 25000,
+          defaultHeaders: Object.keys(defaultHeaders).length > 0 ? defaultHeaders : undefined
+        }),
+        model: preferFast ? (p.model?.replace('4o', '4o-mini') || "gpt-4o-mini") : (p.model || "gpt-4o"),
+        providerId: pid
+      };
     }
-  } catch (err: any) {
-    console.error("DEBUG: DB provider fetch failed", err?.message);
+  } catch (err) { /* silent fail to next */ }
+
+  // 3. GITHUB/ENV FALLBACK
+  const githubId = "github_fallback";
+  if (!triedIds.has(githubId)) {
+    const finalKey = process.env.GITHUB_TOKEN || process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
+    if (finalKey) {
+      const baseUrl = process.env.GITHUB_BASE_URL || process.env.AI_INTEGRATIONS_OPENAI_BASE_URL || "https://models.inference.ai.azure.com";
+      logger.info({ provider: githubId }, "🛠️ Preparando Fallback de GitHub...");
+      
+      return {
+        client: new OpenAI({ 
+          baseURL: baseUrl, 
+          apiKey: finalKey, 
+          timeout: 45000,
+          defaultHeaders: {
+            "Editor-Version": "vscode/1.95.3",
+            "User-Agent": "vscode-copilot",
+          }
+        }),
+        model: preferFast ? "gpt-4o-mini" : (process.env.GITHUB_MODEL || "gpt-4o"),
+        providerId: githubId
+      };
+    }
   }
 
-  // 2. GITHUB_TOKEN fallback
-  if (process.env.GITHUB_TOKEN) {
-    consecutiveErrors = 0;
-    return {
-      client: new OpenAI({
-        baseURL: process.env.GITHUB_BASE_URL || "https://models.inference.ai.azure.com",
-        apiKey: process.env.GITHUB_TOKEN,
-        timeout: 30000,
-      }),
-      model: process.env.GITHUB_MODEL || "gpt-4o",
-      isOllama: false,
-    };
-  }
+  throw new Error("No hay proveedores de IA disponibles después de todos los intentos");
+}
 
-  // No providers available
-  lastErrorTime = now;
-  consecutiveErrors++;
-  throw new Error("No hay proveedores de IA disponibles");
+export async function getClient(preferFast: boolean = false) {
+  return getClientInternal(preferFast);
+}
+
+export async function executeAI<T>(
+  operation: (client: OpenAI, model: string) => Promise<T>,
+  preferFast: boolean = false
+): Promise<T> {
+  const triedIds = new Set<string>();
+  let lastError: any = null;
+
+  for (let i = 0; i < 4; i++) {
+    try {
+      const { client, model, providerId } = await getClientInternal(preferFast, triedIds);
+      return await operation(client, model);
+    } catch (err: any) {
+      lastError = err;
+      const errorMsg = err.message?.toLowerCase() || "";
+      const status = err.status;
+      
+      if (
+        status === 429 || 
+        status === 401 || 
+        status === 403 || 
+        errorMsg.includes("limit") || 
+        errorMsg.includes("quota") ||
+        errorMsg.includes("credit") ||
+        errorMsg.includes("authenticated")
+      ) {
+        // Obtenemos el ID de quien falló para marcarlo
+        // NOTA: getClientInternal sin triedIds nos da el que acabamos de intentar
+        const current = await getClientInternal(preferFast, triedIds).catch(() => ({ providerId: "unknown" }));
+        logger.warn({ provider: current.providerId, error: err.message }, "⚠️ Proveedor agotado o con error, rotando...");
+        triedIds.add(current.providerId);
+        continue;
+      }
+      
+      logger.error({ error: err.message }, "❌ Error en llamada AI");
+      throw err;
+    }
+  }
+  throw lastError || new Error("Falla total de proveedores");
+}
+
+/**
+ * Parsea JSON de forma segura eliminando bloques de código Markdown
+ */
+export function safeParseJSON(text: string): any {
+  try {
+    // Si ya es JSON limpio, parsear directo
+    return JSON.parse(text);
+  } catch {
+    try {
+      // Limpiar bloques de código Markdown ```json ... ``` o ``` ... ```
+      const cleaned = text
+        .replace(/```json/g, "")
+        .replace(/```/g, "")
+        .trim();
+      return JSON.parse(cleaned);
+    } catch (err) {
+      logger.error({ text }, "⚠️ Error parseando JSON de IA, reintentando limpieza agresiva...");
+      // Intento final: buscar cualquier cosa que parezca un objeto entre { y }
+      const match = text.match(/\{[\s\S]*\}/);
+      if (match) {
+        try {
+          return JSON.parse(match[0]);
+        } catch { /* fail */ }
+      }
+      return null;
+    }
+  }
 }
 
 export async function classifyIntent(message: string): Promise<IntentResult> {
-  try {
-    const { client } = await getClient();
+  return executeAI(async (client, model) => {
     const completion = await client.chat.completions.create({
-      model: "gpt-4o-mini",
+      model,
       messages: [
         {
           role: "system",
-          content: `Clasifica la intención del mensaje. Intenciones: ${INTENTS.join(", ")}.
+          content: `Clasifica la intención del mensaje del cliente para un sistema de ventas. 
+Intenciones: ${INTENTS.join(", ")}.
 Responde SOLO JSON: {"intent":"...","confidence":0.9,"entities":{"category":"...","product":"...","brand":"..."}}`,
         },
         { role: "user", content: `Mensaje: "${message}"` },
       ],
       response_format: { type: "json_object" },
       max_completion_tokens: 150,
+      temperature: 0,
     });
-    const r = JSON.parse(completion.choices[0]?.message?.content || "{}");
+    const content = completion.choices[0]?.message?.content || "{}";
+    const r = safeParseJSON(content) || {};
     return {
       intent: r.intent || "desconocido",
       confidence: Math.min(1, Math.max(0, r.confidence || 0.5)),
       entities: r.entities || {},
     };
-  } catch (err: any) {
-    console.error("DEBUG: classifyIntent FAILED!", err?.message);
-    return { intent: "desconocido", confidence: 0, entities: {} };
-  }
+  }, true);
 }
+
 export async function searchRelevantProducts(
   message: string,
   productNames: string[],
 ): Promise<string[]> {
-  try {
-    const { client } = await getClient();
-
-    // Normalization helper: remove diacritics, punctuation, emojis and collapse spaces
+  return executeAI(async (client, model) => {
     const normalize = (s: string) =>
-      s
-        .normalize("NFD")
-        .replace(/\p{Diacritic}/gu, "")
-        .replace(/[^a-z0-9\s]/gi, "")
-        .replace(/\s+/g, " ")
-        .trim()
-        .toLowerCase();
+      s.normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/gi, "").replace(/\s+/g, " ").trim().toLowerCase();
 
-    // Build map of normalized product name -> original with multiple indices for fuzzy matching
     const normMap = new Map<string, string>();
-    const productTokens = new Map<string, string[]>(); // normalized name -> tokens
-
     for (const n of productNames) {
-      const norm = normalize(n);
-      normMap.set(norm, n);
-      productTokens.set(norm, norm.split(/\s+/));
+      normMap.set(normalize(n), n);
     }
 
     const completion = await client.chat.completions.create({
-      model: "gpt-4o-mini",
+      model,
       messages: [
         {
           role: "system",
-          content: `Tu tarea es identificar EXACTAMENTE qué productos de la lista está buscando el cliente.
-REGLAS CRÍTICAS:
-- Si el cliente menciona "piano", busca productos con "piano" en el nombre
-- Si menciona "mega pack" o "pack", busca productos con eso
-- Sé flexible: "mega packs" = "PACK 40 Mega Packs", "piano" = cualquier producto con piano
-- Si no hay coincidencia CLARA, devuelve "none"
-- Devuelve SOLO los nombres exactos de productos que sí coinciden
-PRODUCTOS EN CATÁLOGO: ${productNames.join(" | ")}
-Responde SOLO con los nombres exactos separados por comas, o "none".`,
+          content: `Identifica qué productos del catálogo busca el cliente. 
+REGLAS:
+- Si no hay coincidencia clara, devuelve "none".
+- Devuelve SOLO los nombres exactos separados por comas.
+CATÁLOGO: ${productNames.join(" | ")}`,
         },
         { role: "user", content: `Mensaje: "${message}"` },
       ],
       temperature: 0,
+      max_completion_tokens: 200,
     });
 
     const text = completion.choices[0]?.message?.content || "";
-
     if (normalize(text) === "none") return [];
 
-    // Parse LLM output more robustly
-    const candidates = text
-      .split(/[,\n;|•]+/)
-      .map((t) => t.trim())
-      .filter(Boolean);
-
+    const candidates = text.split(/[,\n;|•]+/).map(t => t.trim()).filter(Boolean);
     const results = new Set<string>();
 
-    // Multiple matching strategies for robustness
     for (const c of candidates) {
       const nn = normalize(c);
-
-      // Strategy 1: Exact normalized match
       if (normMap.has(nn)) {
         results.add(normMap.get(nn)!);
-        continue;
-      }
-
-      // Strategy 2: Substring match (both directions)
-      for (const [k, orig] of normMap.entries()) {
-        if (k.length === 0) continue;
-        if (nn.includes(k) || k.includes(nn)) {
-          results.add(orig);
-          continue;
-        }
-      }
-
-      // Strategy 3: Token-level matching (if at least 70% of tokens match)
-      const cTokens = nn.split(/\s+/);
-      for (const [k, origTokens] of productTokens.entries()) {
-        const matchCount = cTokens.filter(
-          (t) => origTokens.includes(t) && t.length > 2,
-        ).length;
-        const matchRatio =
-          matchCount / Math.max(cTokens.length, origTokens.length);
-        if (matchRatio >= 0.5) {
-          results.add(normMap.get(k)!);
+      } else {
+        for (const [k, orig] of normMap.entries()) {
+          if (k.includes(nn) || nn.includes(k)) results.add(orig);
         }
       }
     }
 
-    // Fallback: search the entire LLM response for product names
-    if (results.size === 0) {
-      const full = normalize(text);
-      for (const [k, orig] of normMap.entries()) {
-        if (k && full.includes(k)) results.add(orig);
-      }
-    }
-
-    // Final validation: ensure all results are in original product list
-    return Array.from(results)
-      .filter((t) => productNames.includes(t))
-      .slice(0, 5);
-  } catch (err: any) {
-    console.error("DEBUG: searchRelevantProducts FAILED!", err?.message);
-    return [];
-  }
+    return Array.from(results).slice(0, 5);
+  }, true);
 }
 
 export async function orchestrate(
@@ -270,55 +305,34 @@ export async function orchestrate(
   history: Array<{ role: "user" | "assistant"; content: string }>,
   businessContext?: string,
 ): Promise<string> {
-  try {
-    const { client } = await getClient();
-
+  return executeAI(async (client, model) => {
     const agent = await db.query.agentsTable.findFirst({
       where: eq(agentsTable.key, "orchestrator"),
     });
 
-    const systemPrompt =
-      agent?.systemPrompt ||
-      `Eres el ORQUESTADOR de ventas.
-Tu única tarea es devolver el nombre del agente adecuado según el mensaje y contexto.
+    const systemPrompt = agent?.systemPrompt || `Eres el cerebro de un sistema de ventas. 
+Tu tarea es decidir qué agente debe responder al cliente.
 
-AGENTES DISPONIBLES:
-- saludo: Para cuando el cliente saluda o inicia contacto.
-- descubrimiento: Para cuando el cliente tiene dudas generales o no sabe qué busca.
-- interes_producto: Cuando menciona un producto específico o pregunta por catálogo.
-- tecnico: Preguntas de especificaciones, compatibilidad o detalles técnicos.
-- objeciones: Cuando tiene dudas de precio, desconfianza o peros.
-- cierre: Cuando quiere comprar, precio final o métodos de pago.
-- datos_envio: Cuando ya aceptó y hay que pedirle dirección/nombre.
-- confirmacion: Confirmar pedido y dar las gracias.
-- soporte: Reclamos, no llega el pedido o fallas.
-- postventa: Fidelización o nuevas ofertas.
+AGENTES:
+- saludo, descubrimiento, interes_producto, tecnico, objeciones, cierre, datos_envio, confirmacion, soporte, postventa.
 
-CONTEXTO NEGOCIO:
-${businessContext || "Venta de productos generales."}
+CONTEXTO: ${businessContext || "Venta general"}
 
 Responde SOLO el nombre del agente en minúsculas.`;
 
     const completion = await client.chat.completions.create({
-      model: "gpt-4o-mini",
+      model,
       messages: [
         { role: "system", content: systemPrompt },
-        ...history.slice(-5).map((h) => ({ role: h.role, content: h.content })),
-        { role: "user", content: `MENSAJE CLIENTE: "${message}"` },
+        ...history.slice(-5).map(h => ({ role: h.role, content: h.content })),
+        { role: "user", content: message },
       ],
       max_completion_tokens: 20,
       temperature: 0,
     });
 
-    const decision =
-      completion.choices[0]?.message?.content?.toLowerCase().trim() ||
-      "descubrimiento";
-    const cleanDecision = decision.replace(/[^a-z_]/g, "");
-    return cleanDecision;
-  } catch (err: any) {
-    console.error("DEBUG: orchestrate FAILED!", err?.message);
-    return "descubrimiento";
-  }
+    return completion.choices[0]?.message?.content?.toLowerCase().replace(/[^a-z_]/g, "") || "descubrimiento";
+  }, true);
 }
 
 export async function generateResponse(
@@ -327,63 +341,43 @@ export async function generateResponse(
   userMessage: string,
   history: Array<{ role: "user" | "assistant"; content: string }>,
 ): Promise<string> {
-  try {
-    const { client, model } = await getClient();
-    const messages: OpenAI.ChatCompletionMessageParam[] = [
-      { role: "system", content: `${systemPrompt}\n\n${context}` },
-      ...history.slice(-12),
-      { role: "user", content: userMessage },
-    ];
+  return executeAI(async (client, model) => {
     const completion = await client.chat.completions.create({
       model,
-      messages,
-      max_completion_tokens: 600,
-      temperature: 0.4,
-    } as OpenAI.ChatCompletionCreateParamsNonStreaming);
-    return (
-      completion.choices[0]?.message?.content ||
-      "Lo siento, no pude procesar tu mensaje."
-    );
-  } catch (err: any) {
-    console.error("DEBUG: generateResponse FAILED!", err?.message, err?.response?.data || "");
-    return "Estoy teniendo dificultades técnicas. Por favor intenta en un momento.";
-  }
+      messages: [
+        { role: "system", content: `${systemPrompt}\n\nCONTEXTO ADICIONAL:\n${context}` },
+        ...history.slice(-10),
+        { role: "user", content: userMessage },
+      ],
+      max_completion_tokens: 800,
+      temperature: 0.7,
+    });
+    return completion.choices[0]?.message?.content || "Lo siento, hubo un error procesando tu respuesta.";
+  });
 }
+
 export async function extractOrderData(
   history: Array<{ role: "user" | "assistant"; content: string }>,
 ): Promise<any | null> {
-  try {
-    const { client } = await getClient();
+  return executeAI(async (client, model) => {
     const completion = await client.chat.completions.create({
-      model: "gpt-4o-mini",
+      model,
       messages: [
         {
           role: "system",
-          content: `Tu tarea es extraer los datos de envío y el producto solicitado de la conversación para crear un pedido en WooCommerce.
-Si faltan datos críticos (nombre, dirección, ciudad o producto), devuelve null.
-IMPORTANTE: Identifica el producto EXACTO y la cantidad. Si el cliente no especificó cantidad, asume 1.
+          content: `Extrae datos de envío y producto del historial.
 Responde SOLO JSON o null: 
-{
-  "first_name": "...", 
-  "last_name": "...", 
-  "address_1": "...", 
-  "city": "...", 
-  "phone": "...",
-  "product_name": "...",
-  "quantity": 1
-}`,
+{ "first_name": "...", "last_name": "...", "address_1": "...", "city": "...", "phone": "...", "product_name": "...", "quantity": 1 }`,
         },
-        ...history.slice(-10).map((h) => ({ role: h.role, content: h.content })),
+        ...history.slice(-8),
       ],
       response_format: { type: "json_object" },
       temperature: 0,
     });
 
-    const data = JSON.parse(completion.choices[0]?.message?.content || "null");
-    if (!data || !data.product_name || !data.address_1 || !data.city) return null;
+    const content = completion.choices[0]?.message?.content || "null";
+    const data = safeParseJSON(content);
+    if (!data || !data.product_name || !data.address_1) return null;
     return data;
-  } catch (err) {
-    console.error("DEBUG: extractOrderData FAILED!", err);
-    return null;
-  }
+  }, true).catch(() => null);
 }

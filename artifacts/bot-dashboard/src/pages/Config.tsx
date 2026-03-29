@@ -1,7 +1,7 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useGetBotConfig, useUpdateBotConfig } from "@workspace/api-client-react";
 import { useForm, Controller } from "react-hook-form";
-import { Save, Bot, MessageCircle, Building2, ToggleLeft, Globe, ShoppingBag, CreditCard, Clock, ShieldCheck, Zap } from "lucide-react";
+import { Save, Bot, MessageCircle, Building2, ToggleLeft, Globe, ShoppingBag, CreditCard, Clock, ShieldCheck, Zap, RefreshCcw, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
@@ -10,6 +10,7 @@ export default function Config() {
   const { data: config, isLoading } = useGetBotConfig();
   const updateMutation = useUpdateBotConfig();
   const { toast } = useToast();
+  const [isResetting, setIsResetting] = useState(false);
 
   const { register, handleSubmit, reset, control, watch } = useForm({
     defaultValues: config || {
@@ -58,6 +59,33 @@ export default function Config() {
     }
   };
 
+  const handleReset = async () => {
+    if (!confirm("¿ESTÁS SEGURO? Esto eliminará TODOS los datos: clientes, conversaciones, productos, agentes y configuraciones. El sistema se reiniciará como nuevo.")) return;
+
+    setIsResetting(true);
+    try {
+      const res = await fetch("/api/admin/reset-all", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        toast({
+          title: "Sistema Reiniciado",
+          description: "Todos los datos han sido eliminados. El sistema está como nuevo.",
+        });
+        setTimeout(() => window.location.reload(), 1500);
+      } else {
+        throw new Error(data.error || "Error al reiniciar");
+      }
+    } catch (e: any) {
+      toast({
+        title: "Error al Reiniciar",
+        description: e.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center p-20 space-y-4">
@@ -76,14 +104,24 @@ export default function Config() {
           </h1>
           <p className="text-xl text-slate-400 mt-3 font-medium tracking-tight">Define el ADN, la personalidad y las integraciones de tu bot.</p>
         </div>
-        <button 
-          onClick={handleSubmit(onSubmit)}
-          disabled={updateMutation.isPending}
-          className="flex items-center gap-3 px-10 py-4 rounded-[1.5rem] bg-emerald-600 text-white font-black uppercase tracking-widest text-xs shadow-2xl shadow-emerald-500/30 hover:bg-emerald-500 hover:-translate-y-1 transition-all active:scale-95 disabled:opacity-50"
-        >
-          <Save size={20} />
-          {updateMutation.isPending ? 'Sincronizando...' : 'Guardar Cambios'}
-        </button>
+        <div className="flex flex-wrap gap-4">
+          <button
+            onClick={handleReset}
+            disabled={isResetting}
+            className="flex items-center gap-3 px-6 py-4 rounded-[1.5rem] bg-red-600/20 text-red-400 font-black uppercase tracking-widest text-xs border border-red-500/30 hover:bg-red-600/30 hover:-translate-y-0.5 transition-all active:scale-95 disabled:opacity-50"
+          >
+            <Trash2 size={20} />
+            {isResetting ? 'Reiniciando...' : 'Reiniciar Sistema'}
+          </button>
+          <button
+            onClick={handleSubmit(onSubmit)}
+            disabled={updateMutation.isPending}
+            className="flex items-center gap-3 px-10 py-4 rounded-[1.5rem] bg-emerald-600 text-white font-black uppercase tracking-widest text-xs shadow-2xl shadow-emerald-500/30 hover:bg-emerald-500 hover:-translate-y-1 transition-all active:scale-95 disabled:opacity-50"
+          >
+            <Save size={20} />
+            {updateMutation.isPending ? 'Sincronizando...' : 'Guardar Cambios'}
+          </button>
+        </div>
       </div>
 
       <form className="grid grid-cols-1 lg:grid-cols-2 gap-8" onSubmit={handleSubmit(onSubmit)}>

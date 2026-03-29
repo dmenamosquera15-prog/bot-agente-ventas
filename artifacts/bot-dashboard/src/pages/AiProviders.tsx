@@ -9,7 +9,9 @@ import {
   X,
   Save,
   ChevronDown,
+  BrainCircuit,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface Provider {
   id: string;
@@ -32,6 +34,9 @@ const PROVIDER_COLORS: Record<string, string> = {
   anthropic: "text-violet-400",
   openrouter: "text-blue-400",
   github_copilot: "text-purple-400",
+  github_models: "text-indigo-400",
+  kimi: "text-rose-400",
+  ollama: "text-cyan-400",
 };
 const PROVIDER_LABELS: Record<string, string> = {
   openai: "OpenAI",
@@ -40,6 +45,9 @@ const PROVIDER_LABELS: Record<string, string> = {
   anthropic: "Anthropic Claude",
   openrouter: "OpenRouter",
   github_copilot: "GitHub Copilot",
+  github_models: "GitHub Models (Token)",
+  kimi: "Kimi Cloud (Moonshot)",
+  ollama: "Ollama (Local/Server)",
 };
 const BASE = "/api";
 
@@ -49,6 +57,10 @@ const PROVIDER_BASE_URLS: Record<string, string> = {
   anthropic: "https://api.anthropic.com/v1",
   openai: "",
   openrouter: "https://openrouter.ai/api/v1",
+  kimi: "https://api.moonshot.cn/v1",
+  github_copilot: "https://api.github.com",
+  github_models: "https://models.inference.ai.azure.com",
+  ollama: "http://localhost:11434/v1",
 };
 
 const empty = {
@@ -68,6 +80,8 @@ export default function AiProviders() {
   const [form, setForm] = useState(empty);
   const [loading, setLoading] = useState(false);
 
+  const [ollamaStatus, setOllamaStatus] = useState<any>(null);
+
   const load = async () => {
     const r = await fetch(`${BASE}/ai-providers`);
     const d = await r.json();
@@ -75,8 +89,21 @@ export default function AiProviders() {
     setModels(d.availableModels || {});
   };
 
+  const checkOllama = async () => {
+    try {
+      const r = await fetch(`${BASE}/ollama/status`);
+      const d = await r.json();
+      setOllamaStatus(d);
+    } catch {
+      setOllamaStatus({ connected: false });
+    }
+  };
+
   useEffect(() => {
     load();
+    checkOllama();
+    const id = setInterval(checkOllama, 10000);
+    return () => clearInterval(id);
   }, []);
 
   const save = async () => {
@@ -135,14 +162,19 @@ export default function AiProviders() {
         {editing ? "Editar Proveedor" : "Nuevo Proveedor de IA"}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="md:col-span-2 bg-primary/5 border border-primary/20 rounded-2xl p-4 mb-2">
+          <p className="text-xs text-primary font-bold flex items-center gap-2">
+            <Check size={14} /> DISEÑO SIMPLIFICADO: Solo necesitas la API Key. El resto es opcional.
+          </p>
+        </div>
         <div>
           <label className="text-xs text-muted-foreground mb-1 block">
-            Nombre
+            Nombre (Opcional)
           </label>
           <input
             value={form.name}
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-            placeholder="Ej: Mi OpenAI"
+            placeholder="Automático (ej: GPT-4o Provider)"
             className="w-full px-3 py-2 rounded-xl bg-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
@@ -158,8 +190,8 @@ export default function AiProviders() {
                 setForm((f) => ({
                   ...f,
                   provider: p,
-                  model: (models[p] || [])[0] || "",
-                  baseUrl: PROVIDER_BASE_URLS[p] || "",
+                  model: "",
+                  baseUrl: "",
                 }));
               }}
               className="w-full px-3 py-2 rounded-xl bg-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 appearance-none"
@@ -178,19 +210,19 @@ export default function AiProviders() {
         </div>
         <div>
           <label className="text-xs text-muted-foreground mb-1 block">
-            API Key{editing ? " (vacío = no cambiar)" : ""}
+            API Key{editing ? " (Dejar vacío para mantener actual)" : " (Requerido)"}
           </label>
           <input
             type="password"
             value={form.apiKey}
             onChange={(e) => setForm((f) => ({ ...f, apiKey: e.target.value }))}
             placeholder="sk-..."
-            className="w-full px-3 py-2 rounded-xl bg-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+            className="w-full px-3 py-2 rounded-xl bg-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 border-primary/30"
           />
         </div>
         <div>
           <label className="text-xs text-muted-foreground mb-1 block">
-            Modelo
+            Modelo (Opcional)
           </label>
           <div className="relative">
             <select
@@ -200,6 +232,7 @@ export default function AiProviders() {
               }
               className="w-full px-3 py-2 rounded-xl bg-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 appearance-none"
             >
+              <option value="">Selección Automática</option>
               {(models[form.provider] || []).map((m) => (
                 <option key={m} value={m}>
                   {m}
@@ -214,14 +247,14 @@ export default function AiProviders() {
         </div>
         <div className="md:col-span-2">
           <label className="text-xs text-muted-foreground mb-1 block">
-            Base URL (opcional, para proveedores compatibles)
+            Base URL (Opcional)
           </label>
           <input
             value={form.baseUrl}
             onChange={(e) =>
               setForm((f) => ({ ...f, baseUrl: e.target.value }))
             }
-            placeholder="https://api.example.com/v1"
+            placeholder="Se completará automáticamente según el proveedor"
             className="w-full px-3 py-2 rounded-xl bg-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
@@ -243,7 +276,7 @@ export default function AiProviders() {
       <div className="flex gap-3 mt-5">
         <button
           onClick={save}
-          disabled={loading || !form.name || (!form.apiKey && !editing)}
+          disabled={loading || (!form.apiKey && !editing && form.provider !== "ollama")}
           className="flex items-center gap-2 px-5 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-40 hover:opacity-90 transition-opacity"
         >
           <Save size={15} /> Guardar
@@ -300,6 +333,71 @@ export default function AiProviders() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Primary AI Selection - Ollama Cloud/Local */}
+          <motion.div
+             initial={{ opacity: 0, x: -20 }}
+             animate={{ opacity: 1, x: 0 }}
+             className="md:col-span-2 bg-gradient-to-br from-cyan-500/10 via-card/50 to-transparent backdrop-blur-3xl border border-cyan-500/30 rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden group mb-4"
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-cyan-500/20 transition-all duration-700" />
+            
+            <div className="flex items-center justify-between mb-8 overflow-x-auto gap-4">
+              <div className="flex items-center gap-5 shrink-0">
+                <div className="w-14 h-14 rounded-2xl bg-cyan-500/20 flex items-center justify-center text-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.1)] border border-cyan-500/20">
+                  <BrainCircuit size={28} />
+                </div>
+                <div>
+                  <h2 className="text-xl font-black text-foreground tracking-tight leading-none uppercase italic">Ollama <span className="text-cyan-400">Power</span></h2>
+                  <div className="flex items-center gap-2 mt-2">
+                     <div className="px-2 py-0.5 rounded-md bg-cyan-500/10 text-[9px] font-black text-cyan-400 tracking-widest uppercase border border-cyan-500/20">Prioridad 1</div>
+                     <div className="px-2 py-0.5 rounded-md bg-white/5 text-[9px] font-black text-muted-foreground tracking-widest uppercase border border-white/5">Nativo (.env)</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className={cn(
+                 "flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-black tracking-widest uppercase border transition-all shrink-0",
+                 ollamaStatus?.connected 
+                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]"
+                  : "bg-red-500/10 border-red-500/30 text-red-400"
+              )}>
+                <div className={cn("w-2 h-2 rounded-full", ollamaStatus?.connected ? "bg-emerald-400 animate-pulse" : "bg-red-400")} />
+                {ollamaStatus?.connected ? "Conectado" : "Desconectado"}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 relative z-10">
+              <div className="lg:col-span-1 p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors">
+                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Host Configurado</p>
+                 <p className="text-sm font-bold text-foreground truncate select-all">{ollamaStatus?.host || "No configurado"}</p>
+              </div>
+
+              <div className="lg:col-span-2 p-4 rounded-2xl bg-white/5 border border-white/5">
+                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Modelos Disponibles (Rotación Automática)</p>
+                 <div className="flex flex-wrap gap-2">
+                   {ollamaStatus?.models?.length > 0 ? (
+                     ollamaStatus.models.map((m: string) => (
+                       <div key={m} className={cn(
+                         "px-3 py-1.5 rounded-xl text-[10px] font-bold border transition-all",
+                         (ollamaStatus.primary === m || ollamaStatus.fallback === m) 
+                          ? "bg-cyan-500/20 border-cyan-500/40 text-cyan-200"
+                          : "bg-white/5 border-white/10 text-muted-foreground"
+                       )}>
+                         {m} {(ollamaStatus.primary === m) && "★"}
+                       </div>
+                     ))
+                   ) : (
+                     <span className="text-xs text-muted-foreground italic">No se encontraron modelos. Verifica que el servidor esté prendido.</span>
+                   )}
+                 </div>
+              </div>
+            </div>
+            
+            <p className="text-[10px] text-muted-foreground mt-6 font-medium italic opacity-60">
+              * El sistema siempre prioriza Ollama. Si falla, usará los proveedores configurados abajo según su estado de activación.
+            </p>
+          </motion.div>
+
           {providers.map((p, i) => (
             <motion.div
               key={p.id}
@@ -325,7 +423,9 @@ export default function AiProviders() {
                           ? "🧠"
                           : p.provider === "github_copilot"
                             ? "🐙"
-                            : "🌐"}
+                            : p.provider === "kimi"
+                              ? "🌙"
+                              : "🌐"}
                 </div>
                 <div>
                   <h3 className="font-semibold text-foreground">{p.name}</h3>

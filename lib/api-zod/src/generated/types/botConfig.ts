@@ -17,6 +17,17 @@ export interface BotConfig {
   isActive: boolean;
   businessName: string;
   businessType: string;
-  paymentMethods: string[];
+  paymentMethods: string;
   workingHours: string;
+  bankName?: string | null;
+  bankAccount?: string | null;
+  bankAccountType?: string | null;
+  bankOwner?: string | null;
+  nequiNumber?: string | null;
+  daviplataNumber?: string | null;
+  paypalEmail?: string | null;
+  mercadoPagoLink?: string | null;
+  wooCommerceUrl?: string | null;
+  wooCommerceConsumerKey?: string | null;
+  wooCommerceConsumerSecret?: string | null;
 }

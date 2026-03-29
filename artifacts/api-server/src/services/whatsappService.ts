@@ -209,8 +209,9 @@ export async function connect(phoneForPairing?: string): Promise<void> {
       "Auth state loaded",
     );
 
-    // Usar browser específico para evitar rechazo
-    const browserConfig = Browsers.ubuntu("Chrome");
+    // Browser configuration optimizado para mejor compatibilidad con WhatsApp
+    // Formato: [Platform, Browser, Version]
+    const browserConfig = ["Chrome (Linux)", "Chrome", "120.0.6099.109"];
 
     sock = makeWASocket({
       version,
@@ -222,9 +223,10 @@ export async function connect(phoneForPairing?: string): Promise<void> {
       browser: browserConfig,
       generateHighQualityLinkPreview: true,
       syncFullHistory: false,
-      qrTimeout: 180000, // 3 minutos para escanear
+      qrTimeout: 60000,
       printQRInTerminal: false,
-      connectTimeoutMs: 60000,
+      connectTimeoutMs: 45000,
+      keepAliveIntervalMs: 30000,
     });
 
     if (thisSocketId !== currentSocketId) {
