@@ -72,7 +72,9 @@ async function generateVoice(text: string): Promise<Buffer | null> {
   }
 }
 
-const AUTH_DIR = join(process.cwd(), "whatsapp_auth");
+const AUTH_DIR = process.env.WHATSAPP_AUTH_DIR
+  ? join(process.env.WHATSAPP_AUTH_DIR)
+  : join(process.cwd(), "whatsapp_auth");
 
 export interface WhatsAppStatus {
   connected: boolean;
@@ -209,9 +211,9 @@ export async function connect(phoneForPairing?: string): Promise<void> {
       "Auth state loaded",
     );
 
-    // Browser configuration optimizado para mejor compatibilidad con WhatsApp
-    // Formato: [Platform, Browser, Version]
-    const browserConfig = ["Chrome (Linux)", "Chrome", "120.0.6099.109"];
+    // Browser configuration optimizado para evitar baneos/rechazos en servidores de la nube (Datacenters)
+    // Se usa 'macOS' genérico, ya que Meta suele bloquear las firmas de 'Linux' asociadas a máquinas VPS.
+    const browserConfig = Browsers.macOS("Desktop");
 
     sock = makeWASocket({
       version,
@@ -221,11 +223,12 @@ export async function connect(phoneForPairing?: string): Promise<void> {
       },
       logger: logger as never,
       browser: browserConfig,
+      markOnlineOnConnect: false,
       generateHighQualityLinkPreview: true,
       syncFullHistory: false,
       qrTimeout: 60000,
       printQRInTerminal: false,
-      connectTimeoutMs: 45000,
+      connectTimeoutMs: 60000,
       keepAliveIntervalMs: 30000,
     });
 
@@ -357,45 +360,37 @@ export async function connect(phoneForPairing?: string): Promise<void> {
           isConnecting = false;
           setTimeout(() => connect(), 3000);
         } else if (isConflict) {
-          const now = Date.now();
-          if (now - lastErrorTime < ERROR_RESET_WINDOW) {
-            consecutiveErrors++;
-          } else {
-            consecutiveErrors = 1;
-          }
-          lastErrorTime = now;
-
-          logger.warn(
-            { consecutiveErrors, errorMessage },
-            "WhatsApp conflict detected - another session is active. Waiting and retrying...",
+          logger.error(
+            { errorMessage },
+            "WhatsApp conflict detected - another session is active. Forcing immediate reset...",
           );
 
-          if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
-            logger.error("Too many consecutive conflicts, forcing full reset");
-            isConnecting = false;
-            consecutiveErrors = 0;
-            SafeReconnectManager.resetState("default");
-            reconnectWithFreshAuth = true;
-            setTimeout(() => {
-              forceReset().catch((err) =>
-                logger.error({ err }, "Force reset failed"),
-              );
-            }, 5000);
-          } else {
-            SafeReconnectManager.recordDisconnect();
-            // En caso de conflicto, simplemente esperar más tiempo antes de reintentar
-            // Esto permite que el usuario cierre la otra sesión
-            const conflictDelay = Math.min(
-              10000 + consecutiveErrors * 5000,
-              60000,
+          isConnecting = false;
+          consecutiveErrors = 0;
+          SafeReconnectManager.resetState("default");
+          reconnectWithFreshAuth = true;
+
+          try {
+            if (existsSync(AUTH_DIR)) {
+              rmSync(AUTH_DIR, { recursive: true, force: true });
+              mkdirSync(AUTH_DIR, { recursive: true });
+            }
+            const rootAuth = join(process.cwd(), "whatsapp_auth");
+            if (existsSync(rootAuth)) {
+              rmSync(rootAuth, { recursive: true, force: true });
+            }
+            logger.info(
+              "Auth cleared due to conflict, reconnecting with fresh session...",
             );
-            logger.info(`Waiting ${conflictDelay / 1000}s before retry...`);
-            setTimeout(async () => {
-              if (SafeReconnectManager.canReconnect()) {
-                await connect();
-              }
-            }, conflictDelay);
+          } catch (err) {
+            logger.error({ err }, "Failed to clear auth during conflict");
           }
+
+          setTimeout(() => {
+            connect().catch((err) =>
+              logger.error({ err }, "Reconnect after conflict reset failed"),
+            );
+          }, 3000);
         } else if (isRestartRequired || isTimedOut) {
           SafeReconnectManager.recordDisconnect();
           if (SafeReconnectManager.canReconnect()) {

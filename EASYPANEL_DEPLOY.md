@@ -94,6 +94,7 @@ GITHUB_REPO=tu_usuario/tu_repo
 
 # WhatsApp (opcional)
 WHATSAPP_PHONE_NUMBER=
+WHATSAPP_AUTH_DIR=/usr/src/app/whatsapp_auth
 ```
 
 ### 2.4 Base de Datos
@@ -102,6 +103,23 @@ WHATSAPP_PHONE_NUMBER=
 2. Copia el `DATABASE_URL` que genera EasyPanel
 3. Pégalo en las variables de entorno
 4. Las migraciones se ejecutarán automáticamente en el primer deploy
+
+### 2.5 Persistencia de WhatsApp (CRÍTICO)
+
+**⚠️ Esta configuración es NECESARIA para que WhatsApp funcione correctamente entre reinicios.**
+
+EasyPanel por defecto borra los archivos temporales cuando se reinicia el contenedor. Para que la sesión de WhatsApp se mantenga:
+
+1. Ve a **Settings** → **Persistent Storage**
+2. Crea un nuevo volumen llamado `whatsapp-data`
+3. Móntalo en la ruta: `/usr/src/app/whatsapp_auth`
+4. Guarda la configuración
+
+**Si no configuras esto:**
+
+- Cada vez que se reinicie el servidor, se borrará la sesión de WhatsApp
+- Tendrás que volver a escanear el QR cada vez
+- Puede causar errores de "ya vinculado" porque la sesión anterior no se limpia correctamente
 
 ## 🔄 Paso 3: Realizar el Primer Deploy
 
