@@ -130,16 +130,16 @@ export default function Landing() {
       </div>
 
       {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 py-4 bg-slate-950/80 backdrop-blur-2xl border-b border-white/10">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-emerald-500 flex items-center justify-center text-xl shadow-lg shadow-emerald-500/30">
+      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 md:px-8 py-3 md:py-4 bg-slate-950/80 backdrop-blur-2xl border-b border-white/10">
+        <div className="flex items-center gap-2 md:gap-3 shrink-0">
+          <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl bg-emerald-500 flex items-center justify-center text-sm md:text-xl shadow-lg shadow-emerald-500/30">
             🤖
           </div>
-          <span className="font-black text-2xl tracking-tighter bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+          <span className="font-black text-lg md:text-2xl tracking-tighter bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent truncate">
             BotVentas IA
           </span>
         </div>
-        <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">
+        <div className="hidden lg:flex items-center gap-8 text-sm font-medium text-slate-400">
           <a href="#features" className="hover:text-white transition-colors">
             Funciones
           </a>
@@ -150,59 +150,59 @@ export default function Landing() {
             Ver Demo
           </a>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 md:gap-4 shrink-0">
           <button
             onClick={() => navigate("/auth")}
-            className="text-sm font-bold text-slate-300 hover:text-white transition-colors"
+            className="text-xs md:text-sm font-bold text-slate-300 hover:text-white transition-colors"
           >
             Entrar
           </button>
           <button
             onClick={() => handlePlanClick("trial")}
-            className="text-sm bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2.5 rounded-full font-bold transition-all shadow-xl shadow-emerald-500/20 active:scale-95"
+            className="text-[10px] md:text-sm bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 md:px-6 md:py-2.5 rounded-full font-bold transition-all shadow-xl shadow-emerald-500/20 active:scale-95 whitespace-nowrap"
           >
-            Prueba de 7 Días
+            Prueba Gratis
           </button>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <header className="relative pt-40 pb-24 px-6 overflow-hidden">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+      <header className="relative pt-32 md:pt-40 pb-16 md:pb-24 px-4 md:px-6 overflow-hidden">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-16 items-center">
           <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="text-left"
+             initial={{ opacity: 0, x: -30 }}
+             animate={{ opacity: 1, x: 0 }}
+             className="text-center lg:text-left flex flex-col items-center lg:items-start"
           >
-            <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-4 py-2 text-xs font-bold text-emerald-400 mb-8 uppercase tracking-widest">
+            <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-3 py-1.5 md:px-4 md:py-2 text-[9px] md:text-xs font-bold text-emerald-400 mb-6 md:mb-8 uppercase tracking-widest leading-none">
               ✨ El futuro de las ventas digitales
             </div>
-            <h1 className="text-6xl md:text-8xl font-black leading-[0.9] tracking-tighter mb-8">
-              Convierte más con <br />
+            <h1 className="text-4xl md:text-6xl lg:text-8xl font-black leading-[1.0] md:leading-[0.9] tracking-tighter mb-6 md:mb-8 px-2 md:px-0">
+              Convierte más con <br className="hidden md:block"/>
               <span className="text-emerald-500">WhatsApp IA</span>
             </h1>
-            <p className="text-xl md:text-2xl text-slate-400 mb-10 leading-relaxed max-w-xl">
+            <p className="text-base md:text-xl lg:text-2xl text-slate-400 mb-8 md:mb-10 leading-relaxed max-w-xl px-2 md:px-0">
               Deja que nuestra IA atienda a tus clientes 24/7, muestre tus
               productos y cierre ventas cobrando automáticamente por
               <span className="text-white font-bold ml-1">
                 Mercado Pago y PayPal.
               </span>
             </p>
-            <div className="flex flex-wrap gap-4 items-center">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-4 items-center justify-center lg:justify-start w-full sm:w-auto px-4 sm:px-0">
               <button
                 onClick={() => handlePlanClick("trial")}
-                className="px-8 py-4 rounded-2xl bg-emerald-600 text-white font-black text-xl hover:bg-emerald-500 transition-all shadow-2xl shadow-emerald-500/40 hover:-translate-y-1 active:translate-y-0"
+                className="w-full sm:w-auto px-6 py-4 rounded-2xl bg-emerald-600 text-white font-black text-lg md:text-xl hover:bg-emerald-500 transition-all shadow-2xl shadow-emerald-500/40 active:scale-95 whitespace-nowrap"
               >
-                🚀 Iniciar Mi Tienda Gratis
+                🚀 Iniciar Gratis
               </button>
-              <div className="flex -space-x-3 items-center ml-4">
+              <div className="flex -space-x-3 items-center mt-2 sm:mt-0 sm:ml-4">
                 {[1, 2, 3, 4].map((i) => (
                   <div
                     key={i}
-                    className="w-10 h-10 rounded-full border-2 border-slate-950 bg-slate-800"
+                    className="w-8 h-8 md:w-10 md:h-10 rounded-full border-2 border-slate-950 bg-slate-800"
                   />
                 ))}
-                <span className="ml-6 text-sm text-slate-500 font-bold">
+                <span className="ml-4 md:ml-6 text-xs md:text-sm text-slate-500 font-bold">
                   +2.4k negocios ya lo usan
                 </span>
               </div>
@@ -210,32 +210,32 @@ export default function Landing() {
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="relative"
+             initial={{ opacity: 0, scale: 0.9 }}
+             animate={{ opacity: 1, scale: 1 }}
+             className="relative mt-8 lg:mt-0 px-6 sm:px-0 w-full flex justify-center"
           >
-            <div className="absolute -inset-4 bg-emerald-500/20 rounded-full blur-[100px] opacity-50" />
+            <div className="absolute -inset-4 bg-emerald-500/20 rounded-full blur-[60px] md:blur-[100px] opacity-40 md:opacity-50" />
             <img
               src="/images/whatsapp_bot_mockup.jpg"
               alt="Bot Interface"
-              className="relative rounded-3xl shadow-2xl border border-white/10 w-full max-w-sm mx-auto"
+              className="relative rounded-3xl md:rounded-[2rem] shadow-2xl border border-white/10 w-full max-w-[280px] md:max-w-sm object-cover"
             />
           </motion.div>
         </div>
       </header>
 
       {/* Stats / Proof */}
-      <section className="bg-slate-900/50 py-12 border-y border-white/5">
-        <div className="max-w-7xl mx-auto flex flex-wrap justify-center md:justify-around gap-12 px-6">
+      <section className="bg-slate-900/50 py-10 md:py-12 border-y border-white/5">
+        <div className="max-w-7xl mx-auto flex flex-wrap justify-center md:justify-around gap-8 md:gap-12 px-6">
           {[
             { n: "+50k", l: "Conversaciones hoy" },
             { n: "99.9%", l: "Uptime garantizado" },
             { n: "x3", l: "Aumento en conversiones" },
             { n: "24/7", l: "Soporte Prioritario" },
           ].map((s) => (
-            <div key={s.l} className="text-center">
-              <div className="text-3xl font-black text-white">{s.n}</div>
-              <div className="text-sm font-bold text-slate-500 uppercase tracking-widest">
+            <div key={s.l} className="text-center w-[40%] md:w-auto">
+              <div className="text-2xl md:text-3xl font-black text-white">{s.n}</div>
+              <div className="text-[10px] md:text-sm font-bold text-slate-500 uppercase tracking-widest mt-1">
                 {s.l}
               </div>
             </div>
@@ -244,25 +244,32 @@ export default function Landing() {
       </section>
 
       {/* Dashboard Preview */}
-      <section id="demo" className="py-24 px-6 overflow-hidden">
-        <div className="max-w-7xl mx-auto text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-black mb-6">
+      <section id="demo" className="py-16 md:py-24 px-4 md:px-6 overflow-hidden">
+        <div className="max-w-7xl mx-auto text-center mb-10 md:mb-16">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-black mb-4 md:mb-6">
             Gestiona todo desde un solo lugar
           </h2>
-          <p className="text-xl text-slate-400 max-w-2xl mx-auto">
+          <p className="text-base md:text-xl text-slate-400 max-w-2xl mx-auto">
             Nuestro panel de control te permite ver métricas, editar productos y
             administrar tus facturas en tiempo real.
           </p>
         </div>
         <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          className="max-w-5xl mx-auto rounded-3xl overflow-hidden shadow-2xl border border-white/10"
+           initial={{ opacity: 0, y: 50 }}
+           whileInView={{ opacity: 1, y: 0 }}
+           className="max-w-5xl mx-auto rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl border border-white/10"
         >
           <img
             src="/images/saas_dashboard_preview.jpg"
-            alt="SaaS Dashboard"
-            className="w-full"
+            alt="SaaS Dashboard Preview"
+            className="w-full object-cover aspect-video bg-slate-900 text-slate-500 font-bold flexitems-center justify-center min-h-[200px]"
+            onError={(e) => {
+              // Fallback if image doesn't exist
+              const target = e.target as HTMLImageElement;
+              target.style.display = "none";
+              target.parentElement?.classList.add("bg-slate-900", "min-h-[200px]", "md:min-h-[400px]", "flex", "items-center", "justify-center", "text-slate-500");
+              if(target.parentElement) target.parentElement.innerHTML = "📊 Dashboard Interface (Simulación)";
+            }}
           />
         </motion.div>
       </section>
@@ -290,27 +297,27 @@ export default function Landing() {
       </section>
 
       {/* Pricing Table */}
-      <section id="precios" className="py-24 px-6 bg-slate-900/30">
-        <div className="max-w-7xl mx-auto text-center mb-16">
-          <h2 className="text-5xl md:text-6xl font-black mb-6 italic">
+      <section id="precios" className="py-16 md:py-24 px-4 md:px-6 bg-slate-900/30">
+        <div className="max-w-7xl mx-auto text-center mb-10 md:mb-16">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-black mb-4 md:mb-6 italic">
             Planes Sin Complicaciones
           </h2>
-          <p className="text-xl text-slate-400">
+          <p className="text-base md:text-xl text-slate-400">
             Escala tu negocio a medida que creces.
           </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto">
           {PLANS.map((plan) => (
             <div
               key={plan.id}
-              className={`relative flex flex-col p-10 rounded-[3rem] border-2 transition-all hover:scale-[1.02] ${
+              className={`relative flex flex-col p-8 md:p-10 rounded-3xl md:rounded-[3rem] border-2 transition-all hover:scale-[1.02] ${
                 plan.id === "monthly"
                   ? "border-emerald-500 bg-emerald-500/10"
                   : "border-white/10 bg-slate-900/50"
               }`}
             >
               <div
-                className={`self-start text-xs font-black uppercase tracking-widest px-4 py-1.5 rounded-full mb-8 ${
+                className={`self-start text-[10px] md:text-xs font-black uppercase tracking-widest px-3 py-1 md:px-4 md:py-1.5 rounded-full mb-6 md:mb-8 ${
                   plan.id === "monthly"
                     ? "bg-emerald-500 text-white"
                     : "bg-white/10 text-slate-300"
@@ -318,27 +325,27 @@ export default function Landing() {
               >
                 {plan.badge}
               </div>
-              <h3 className="text-4xl font-black mb-2">{plan.name}</h3>
-              <div className="mb-8">
-                <span className="text-5xl font-black">{plan.price}</span>
-                <span className="text-slate-500 ml-2 font-bold">
+              <h3 className="text-3xl md:text-4xl font-black mb-2">{plan.name}</h3>
+              <div className="mb-6 md:mb-8">
+                <span className="text-4xl md:text-5xl font-black">{plan.price}</span>
+                <span className="text-slate-500 ml-2 font-bold text-sm md:text-base">
                   {plan.period}
                 </span>
               </div>
-              <ul className="space-y-4 mb-10 flex-1">
+              <ul className="space-y-3 md:space-y-4 mb-8 md:mb-10 flex-1">
                 {plan.features.map((feat) => (
                   <li
                     key={feat}
-                    className="flex items-center gap-3 text-slate-300 font-medium"
+                    className="flex items-center gap-3 text-slate-300 font-medium text-sm md:text-base"
                   >
-                    <span className="text-emerald-500 text-lg">✦</span>{" "}
+                    <span className="text-emerald-500 text-base md:text-lg shrink-0">✦</span>{" "}
                     {feat.replace(/^✅|^⏳/, "")}
                   </li>
                 ))}
               </ul>
               <button
                 onClick={() => handlePlanClick(plan.id)}
-                className={`w-full py-4 rounded-2xl font-black text-lg transition-all ${
+                className={`w-full py-3 md:py-4 rounded-xl md:rounded-2xl font-black text-base md:text-lg transition-all ${
                   plan.id === "monthly"
                     ? "bg-emerald-600 text-white shadow-xl shadow-emerald-500/40 hover:bg-emerald-500"
                     : "bg-white/10 text-white hover:bg-white/20"
@@ -352,19 +359,19 @@ export default function Landing() {
       </section>
 
       {/* CTA Final */}
-      <section className="py-32 px-6 relative overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-500/20 rounded-full blur-[120px] pointer-events-none" />
+      <section className="py-20 md:py-32 px-4 md:px-6 relative overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] md:w-[600px] md:h-[600px] bg-emerald-500/20 rounded-full blur-[80px] md:blur-[120px] pointer-events-none" />
         <div className="max-w-4xl mx-auto text-center relative z-10">
-          <h2 className="text-6xl md:text-8xl font-black leading-[0.9] tracking-tighter mb-10 italic">
-            Empieza hoy el mañana <br /> de tu negocio
+          <h2 className="text-5xl md:text-7xl lg:text-8xl font-black leading-[1.0] md:leading-[0.9] tracking-tighter mb-8 md:mb-10 italic">
+            Empieza hoy el mañana <br className="hidden md:block"/> de tu negocio
           </h2>
           <button
             onClick={() => handlePlanClick("trial")}
-            className="px-12 py-6 rounded-3xl bg-emerald-500 text-slate-950 font-black text-3xl hover:bg-emerald-400 transition-all shadow-2xl shadow-emerald-500/50 hover:scale-105 active:scale-95"
+            className="w-full sm:w-auto px-8 py-5 md:px-12 md:py-6 rounded-2xl md:rounded-3xl bg-emerald-500 text-slate-950 font-black text-xl md:text-3xl hover:bg-emerald-400 transition-all shadow-2xl shadow-emerald-500/50 hover:scale-105 active:scale-95"
           >
             🎁 7 DÍAS GRATIS
           </button>
-          <p className="mt-8 text-slate-500 font-bold uppercase tracking-[0.3em]">
+          <p className="mt-6 md:mt-8 text-slate-500 font-bold uppercase tracking-[0.2em] md:tracking-[0.3em] text-xs md:text-base">
             Cero Riesgo · Cancela en Segundos
           </p>
         </div>
