@@ -211,8 +211,8 @@ export async function connect(phoneForPairing?: string): Promise<void> {
       "Auth state loaded",
     );
 
-    // Browser configuration optimizado para evitar baneos/rechazos en servidores de la nube (Datacenters)
-    // Se usa 'macOS' genérico, ya que Meta suele bloquear las firmas de 'Linux' asociadas a máquinas VPS.
+// Browser configuration optimizado para mejor compatibilidad con WhatsApp
+    // Usar macOS Desktop para evitar bloqueos en servidores cloud
     const browserConfig = Browsers.macOS("Desktop");
 
     sock = makeWASocket({
@@ -226,10 +226,10 @@ export async function connect(phoneForPairing?: string): Promise<void> {
       markOnlineOnConnect: false,
       generateHighQualityLinkPreview: true,
       syncFullHistory: false,
-      qrTimeout: 60000,
+      qrTimeout: 120000,
       printQRInTerminal: false,
       connectTimeoutMs: 60000,
-      keepAliveIntervalMs: 30000,
+      keepAliveIntervalMs: 45000,
     });
 
     if (thisSocketId !== currentSocketId) {
@@ -268,7 +268,9 @@ export async function connect(phoneForPairing?: string): Promise<void> {
         pairingCode = null;
         isConnected = false;
         qrGeneratedTime = Date.now();
-        logger.info("WhatsApp QR generated - esperando escaneo...");
+        logger.info("WhatsApp QR generado - ESCANEA ESTE CÓDIGO con tu WhatsApp");
+        logger.info("Abre WhatsApp > Ajustes > Dispositivos Vinculados > Vincular dispositivo");
+        logger.info("El QR expirará en 2 minutos...");
       }
 
       // Timeout: si pasan 90 segundos sin conectar, generar nuevo QR

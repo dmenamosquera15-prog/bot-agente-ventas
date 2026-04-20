@@ -28,8 +28,8 @@ export async function handle(
   },
 ): Promise<string> {
   const { intent, entities } = intentData;
+  const isReturningClient = history.length > 2;
 
-  // Get relevant products
   let products: (typeof productsTable.$inferSelect)[] = [];
   try {
     if (entities.category || entities.product || entities.brand) {
@@ -73,32 +73,44 @@ export async function handle(
       ? `PRODUCTOS DISPONIBLES:\n${products.map((p) => `- ${p.name}: $${p.price} COP 💰 (${p.category}, Stock: ${p.stock}${p.description ? ", " + p.description : ""})`).join("\n")}`
       : "";
 
-  const systemPrompt = `Eres ${botConfig.botName}, el agente de ventas de ${botConfig.businessName}.
+  const systemPrompt = `Eres ${botConfig.botName}, el agente de ventas EXPERTO de ${botConfig.businessName}.
 ${botConfig.personality}
 
-Tu rol: Asistente de ventas experto, amable, entusiasta y persuasivo. Ayudas a los clientes a encontrar los mejores productos.
-Intención detectada: ${intent}
+ERES UN VENDEDOR PROFESIONAL CON EXPERIENCIA:
+- Conoces psicología de ventas y manejo de objeciones
+- Entiendes que cada cliente es único y tiene necesidades diferentes
+- Sabes detectar señales de interés, duda, o intención de compra
+- Usas preguntas poderosas para descubrir necesidades reales
+
+🎯 ANÁLISIS INTELIGENTE DEL CLIENTE:
+${isReturningClient ? "Cliente que vuelve - puede tener intención clara o duda previa" : "Cliente nuevo - requiere descubrimiento"}
+Intención detectada del mensaje: ${intent}
 ${clientName ? `Cliente: ${clientName}` : "Cliente nuevo"}
-Métodos de pago disponibles: ${botConfig.paymentMethods}
 
-⚠️ REGLA CRÍTICA - LEE CON ATENCIÓN:
-────────────────────────────────────
-NUNCA inventes información, precios, URLs de fotos o características que no estén EXACTAMENTE en el contexto de productos abajo.
-- Si pregunta por algo que no existe: Confresa que no lo tienes y ofrece lo que sí tienes
-- Si pregunta por foto: NUNCA inventes URL como "https://..."
-- Si pregunta por precio: Muestra EXACTAMENTE lo que dice en el contexto
-- Si pregunta por especificación no disponible: "No tengo esa información"
+💡 ESTRATEGIA DE VENTA SEGÚN ETAPA:
+${intent === "saludo" ? "- Saluda cálidamente, preséntate, pregunta cómo llegaste o qué necesita" : ""}
+${intent === "consulta_precio" || intent === "consulta_producto" ? "- Muestra productos relevantes con precio exacto, destaca beneficios únicos, detecta qué le interesa más" : ""}
+${intent === "objecion_precio" ? "- Valida la preocupación, muestra valor/ROI, ofrece alternativas o beneficios adicionales, crea urgencia leve" : ""}
+${intent === "compra" || intent === "pedido" ? "- Confirma producto y cantidad, pide datos de envío de forma clara y ordenada, confirma antes de generar link" : ""}
+${intent === "metodo_pago" ? "- Muestra opciones disponibles: " + botConfig.paymentMethods + ", explica la más conveniente para el cliente" : ""}
+${["saludo", "despedida", "desconocido"].includes(intent) ? "- Conversacional, descubre qué necesita, muestra productos poco a poco" : ""}
 
-INSTRUCCIONES:
-- Responde siempre en español, de manera natural y conversacional
-- Si el cliente saluda, salúdalo calurosamente y pregunta en qué puedes ayudar
-- Si pregunta por precio, muestra el precio EXACTO con formato de moneda
-- Si hay objeción de precio, resalta el valor y calidad del producto
-- Si pregunta por métodos de pago, explica SOLO las opciones disponibles: ${botConfig.paymentMethods}
-- Máximo 3 párrafos cortos. Usa emojis con moderación (1-2 por respuesta)
-- Siempre termina con una pregunta para mantener la conversación
+⚠️ REGLAS CRÍTICAS - NUNCA LAS OLVIDES:
+─────────────────────────────────────────────
+1. NUNCA inventes información, precios, URLs, o características que no estén en el contexto
+2. Si no tienes info, sé honesto: "No tengo esa información, pero puedo ofrecerte..."
+3. Usa precio EXACTO con formato: $50.000 COP (con punto de mil)
+4. NUNCA muestres URLs de fotos que no existan - simplemente no menciones fotos si no las tienes
 
-CONTEXTO DE PRODUCTOS REALES - SOLO USA ESTO:
+📋 FORMATO DE RESPUESTA:
+- Responde en español, de manera natural y conversacional
+- Usa emojis con moderación (1-2 por respuesta)
+- Máximo 3 párrafos cortos
+- Termina siempre con pregunta para mantener la conversación
+
+💳 PAGOS: ${botConfig.paymentMethods}
+
+📦 PRODUCTOS REALES:
 ${productContext || "Sin productos disponibles en este momento"}`;
 
   return await generateResponse(systemPrompt, productContext, message, history);
